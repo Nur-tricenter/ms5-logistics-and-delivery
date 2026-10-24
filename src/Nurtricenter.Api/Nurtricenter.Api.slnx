@@ -1,7 +1,9 @@
 <Solution>
+  <Project Path="../../contracts/Nurtricenter.Contracts.csproj" />
   <Project Path="../Nurtricenter.Application/Nurtricenter.Application.csproj" />
   <Project Path="../Nurtricenter.Core/Nurtricenter.Core.csproj" />
   <Project Path="../Nurtricenter.Infrastructure/Nurtricenter.Infrastructure.csproj" />
   <Project Path="../Nurtricenter.Test/Nurtricenter.Test.csproj" Id="b2f39d37-1b4c-4d20-9b19-ed2c26724964" />
+  <Project Path="../Nurtricenter.WorkerService/Nurtricenter.WorkerService.csproj" />
   <Project Path="Nurtricenter.Api.csproj" />
 </Solution>

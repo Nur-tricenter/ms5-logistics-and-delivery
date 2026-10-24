@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The integration contracts themselves live in the shared kernel
+    (Nur.Tricenter.Integration.Messages.Logistics), so publisher and consumers compile against the
+    same types. This project keeps only what the kernel cannot hold: the exchange registry
+    (NurtricenterExchanges). The kernel's naming rule forbids domain words outside message types.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Nurtricenter.Contracts</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Restored from the Nur-tricenter feed (see NuGet.config at the repository root). -->
+    <PackageReference Include="Nur.Tricenter.Integration" Version="1.1.0" />
+  </ItemGroup>
+
+</Project>

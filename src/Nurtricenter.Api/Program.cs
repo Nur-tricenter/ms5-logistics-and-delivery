@@ -1,4 +1,4 @@
-using Nurtricenter.Api;
+﻿using Nurtricenter.Api;
 using Nurtricenter.Application;
 using Nurtricenter.Infrastructure;
 using Serilog;
@@ -14,7 +14,7 @@ builder.Host.UseSerilog();
 builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration)
-    .AddApiServices();
+    .AddApiServices(builder.Configuration);
 
 var app = builder.Build();
 
@@ -33,3 +33,5 @@ finally
 {
     Log.CloseAndFlush();
 }
+
+public partial class Program { }

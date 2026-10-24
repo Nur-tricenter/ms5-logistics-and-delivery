@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <!--
+    Dependency rule: the worker references Infrastructure ONLY. Application arrives transitively
+    through it, so a direct reference here would be a second, redundant edge that the two
+    projects can drift apart on.
+
+    The worker is the single host that runs the transactional outbox processor and publishes the
+    integration events to RabbitMQ. It is a pure producer: no consumer is registered.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Joseco.Communication.External.RabbitMQ" Version="1.1.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.0" />
+    <PackageReference Include="Serilog.Enrichers.Process" Version="3.0.0" />
+    <PackageReference Include="Serilog.Enrichers.Span" Version="3.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nurtricenter.Infrastructure\Nurtricenter.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

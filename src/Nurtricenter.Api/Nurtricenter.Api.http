@@ -1,6 +1,34 @@
 @Nurtricenter.Api_HostAddress = http://localhost:5036
 
-GET {{Nurtricenter.Api_HostAddress}}/weatherforecast/
+### Health — probed by Consul when service discovery is enabled
+GET {{Nurtricenter.Api_HostAddress}}/health
+Accept: application/json
+
+###
+
+### Create courier
+POST {{Nurtricenter.Api_HostAddress}}/api/v1/couriers
+Content-Type: application/json
+
+{
+  "fullName": "Jane Doe"
+}
+
+###
+
+### Create route for a courier
+POST {{Nurtricenter.Api_HostAddress}}/api/v1/routes
+Content-Type: application/json
+
+{
+  "courierId": "00000000-0000-0000-0000-000000000000",
+  "scheduledDate": "2026-10-22"
+}
+
+###
+
+### Get a courier's route for today
+GET {{Nurtricenter.Api_HostAddress}}/api/v1/couriers/00000000-0000-0000-0000-000000000000/route/today
 Accept: application/json
 
 ###

@@ -8,7 +8,7 @@ public sealed class AddDeliveries(IMediator mediator) : EndpointBaseAsync
     .WithRequest<IReadOnlyList<AddDeliveryRequestItem>>
     .WithActionResult<AddDeliveriesResponse>
 {
-    [HttpPost("/packages/deliveries")]
+    [HttpPost("/api/v1/packages/deliveries")]
     public override async Task<ActionResult<AddDeliveriesResponse>> HandleAsync(
         IReadOnlyList<AddDeliveryRequestItem> request,
         CancellationToken cancellationToken)
@@ -25,6 +25,6 @@ public sealed class AddDeliveries(IMediator mediator) : EndpointBaseAsync
         var command = new AddDeliveriesCommand(items);
         var response = await mediator.Send(command, cancellationToken);
 
-        return Created($"/packages/deliveries/{response.RouteId}", response);
+        return Created($"/api/v1/packages/deliveries/{response.RouteId}", response);
     }
 }

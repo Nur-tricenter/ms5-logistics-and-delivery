@@ -8,7 +8,7 @@ public sealed class CreateCourier(IMediator mediator) : EndpointBaseAsync
     .WithRequest<CreateCourierRequest>
     .WithActionResult<CourierResponse>
 {
-    [HttpPost("/couriers")]
+    [HttpPost("/api/v1/couriers")]
     public override async Task<ActionResult<CourierResponse>> HandleAsync(
         CreateCourierRequest request,
         CancellationToken cancellationToken)
@@ -16,6 +16,6 @@ public sealed class CreateCourier(IMediator mediator) : EndpointBaseAsync
         var command = new CreateCourierCommand(request.FullName);
         var response = await mediator.Send(command, cancellationToken);
 
-        return Created($"/couriers/{response.Id}", response);
+        return Created($"/api/v1/couriers/{response.Id}", response);
     }
 }

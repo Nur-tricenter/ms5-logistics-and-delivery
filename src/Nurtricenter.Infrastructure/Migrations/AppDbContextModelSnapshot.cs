@@ -22,6 +22,51 @@ namespace Nurtricenter.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Joseco.Outbox.Contracts.Model.OutboxMessage<Joseco.DDD.Core.Abstractions.DomainEvent>", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("outboxId");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<string>("CorrelationId")
+                        .HasColumnType("text")
+                        .HasColumnName("correlationId");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created");
+
+                    b.Property<bool>("Processed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("processed");
+
+                    b.Property<DateTime?>("ProcessedOn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processedOn");
+
+                    b.Property<string>("SpanId")
+                        .HasColumnType("text")
+                        .HasColumnName("spanId");
+
+                    b.Property<string>("TraceId")
+                        .HasColumnType("text")
+                        .HasColumnName("traceId");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("outboxMessage", "outbox");
+                });
+
             modelBuilder.Entity("Nurtricenter.Core.Domain.Courier.Courier", b =>
                 {
                     b.Property<Guid>("Id")

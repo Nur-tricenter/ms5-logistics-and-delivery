@@ -8,7 +8,7 @@ public sealed class CreateRoute(IMediator mediator) : EndpointBaseAsync
     .WithRequest<CreateRouteRequest>
     .WithActionResult<RouteResponse>
 {
-    [HttpPost("/routes")]
+    [HttpPost("/api/v1/routes")]
     public override async Task<ActionResult<RouteResponse>> HandleAsync(
         CreateRouteRequest request,
         CancellationToken cancellationToken)
@@ -16,6 +16,6 @@ public sealed class CreateRoute(IMediator mediator) : EndpointBaseAsync
         var command = new CreateRouteCommand(request.CourierId, request.ScheduledDate);
         var response = await mediator.Send(command, cancellationToken);
 
-        return Created($"/routes/{response.Id}", response);
+        return Created($"/api/v1/routes/{response.Id}", response);
     }
 }

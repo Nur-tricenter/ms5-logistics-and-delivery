@@ -1,13 +1,31 @@
 name: nurtricenter-ms5
 
+# Standalone stack for this service. For the full platform (Consul + RabbitMQ + shared gateway),
+# join the platform stack (nur-tricenter-local) instead — the platform compose supplies its own
+# ServiceRegistration__* values (ServiceName=nurtricenter, Host=<container name>, Port=8080).
+#
+# The image must be built with the updated Dockerfile (which publishes the worker too):
+#   docker build --secret id=nuget_username,env=NUGET_USERNAME --secret id=nuget_token,env=NUGET_TOKEN -t aguerreroc/nurtricenter-ms5:0.2.0 .
+# Fill the ConnectionStrings__DefaultConnection placeholders before `docker compose up`.
+
 services:
   api:
-    image: aguerreroc/nurtricenter-ms5:0.1.0
+    image: aguerreroc/nurtricenter-ms5:0.2.0
     container_name: nurtricenter-ms5-api
     ports:
       - "8080:8080"
-    env_file:
-      - .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      HttpsRedirection__Enabled: "false"
+      ConnectionStrings__DefaultConnection: "Host=host.docker.internal;Port=5432;Database=neondb;Username=CHANGE_ME;Password=CHANGE_ME"
+      # Consul self-registration: leave ServiceDiscoveryAddress blank to run WITHOUT discovery;
+      # point it at a reachable Consul agent (e.g. http://host.docker.internal:8500) to be
+      # advertised to the shared gateway.
+      ServiceRegistration__ServiceDiscoveryAddress: ""
+      ServiceRegistration__ServiceName: "nurtricenter"
+      ServiceRegistration__ServiceId: "nurtricenter-1"
+      ServiceRegistration__Host: "nurtricenter-ms5-api"
+      ServiceRegistration__Port: "8080"
     networks: [backend]
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
@@ -15,5 +33,23 @@ services:
       timeout: 5s
       start_period: 15s
       retries: 3
+
+  worker:
+    image: aguerreroc/nurtricenter-ms5:0.2.0
+    container_name: nurtricenter-ms5-worker
+    command: ["dotnet", "worker/Nurtricenter.WorkerService.dll"]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Host=host.docker.internal;Port=5432;Database=neondb;Username=CHANGE_ME;Password=CHANGE_ME"
+      # NOTE: Joseco.Communication.External.RabbitMQ 1.1.0 ignores RabbitMqSettings__Port, so the
+      # broker MUST be reachable on host port 5672.
+      RabbitMqSettings__Host: "host.docker.internal"
+      RabbitMqSettings__UserName: "guest"
+      RabbitMqSettings__Password: "guest"
+      RabbitMqSettings__VirtualHost: "/"
+      RabbitMqSettings__MaxRetryAttempts: "3"
+      RabbitMqSettings__RetryBaseDelayMilliseconds: "500"
+    networks: [backend]
+
 networks:
   backend:

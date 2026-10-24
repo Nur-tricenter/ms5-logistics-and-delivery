@@ -7,9 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Nurtricenter.Test" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Consul" Version="1.7.14.7" />
+    <PackageReference Include="Joseco.Outbox.Contracts" Version="1.0.2" />
+    <PackageReference Include="Joseco.Outbox.EFCore" Version="1.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
+    <PackageReference Include="Scrutor" Version="6.0.1" />
   </ItemGroup>
 
   <ItemGroup>

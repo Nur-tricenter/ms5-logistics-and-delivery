@@ -1,0 +1,99 @@
+# =============================================================================
+#  ms5 (logistics and delivery) — PLATFORM variant.
+#
+#  Included by nur-tricenter-local/compose/docker-compose.yml. NOT the standalone
+#  docker-compose.yml next to this file, which runs ms5 alone from the published image.
+#
+#  Both processes are bind-mounted from this repository's bin/Debug output, like every
+#  other business process on the platform, so build before (re)starting them:
+#
+#    dotnet build src/Nurtricenter.Api/Nurtricenter.Api.csproj
+#    dotnet build src/Nurtricenter.WorkerService/Nurtricenter.WorkerService.csproj
+#
+#  Database: ms5's Neon cloud database, NOT the platform Postgres. The connection string
+#  is a secret, so it is read from `.env` next to this file (gitignored), never committed:
+#
+#    ConnectionStrings__DefaultConnection=Host=...neon.tech;Database=...;Username=...;Password=...;SSL Mode=Require
+#
+#  Without that file both containers start and fail on their first query. The schema
+#  already lives in Neon; migrations are applied there by hand, as always.
+#
+#  ASPNETCORE_ENVIRONMENT is Production on purpose: bin/Debug carries the gitignored
+#  appsettings.Development.json (localhost Consul/RabbitMQ), which must not leak in.
+# =============================================================================
+
+services:
+  nurtricenter-api:
+    image: mcr.microsoft.com/dotnet/aspnet:10.0
+    container_name: nur-tricenter-nurtricenter-api
+    hostname: nurtricenter-api
+    working_dir: /app
+    command: ["dotnet", "Nurtricenter.Api.dll"]
+    volumes:
+      - ./src/Nurtricenter.Api/bin/Debug/net10.0:/app:ro
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ClinicService__BaseUrl: "https://763708cb-6809-4a65-be56-fe140385a461.mock.pstmn.io"
+      branchCoordinates__latitude: "-17.768853725548713"
+      branchCoordinates__longitude: "-63.18276022365929"
+      HttpsRedirection__Enabled: "false"
+      # Consul self-registration. ServiceName is the gateway route segment:
+      # /api/nurtricenter/v1/couriers -> this container's /api/v1/couriers.
+      ServiceRegistration__ServiceDiscoveryAddress: "http://nur-tricenter-consul:8500"
+      ServiceRegistration__ServiceName: "nurtricenter"
+      ServiceRegistration__ServiceId: "nurtricenter-1"
+      ServiceRegistration__Host: "nurtricenter-api"
+      ServiceRegistration__Port: "8080"
+    networks: [nur-tricenter-net]
+    depends_on:
+      consul:
+        condition: service_started
+    healthcheck:
+      # Shell TCP probe: the aspnet runtime image ships no curl.
+      test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/127.0.0.1/8080' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  nurtricenter-workerservice:
+    image: mcr.microsoft.com/dotnet/aspnet:10.0
+    container_name: nur-tricenter-nurtricenter-workerservice
+    hostname: nurtricenter-workerservice
+    working_dir: /app
+    command: ["dotnet", "Nurtricenter.WorkerService.dll"]
+    volumes:
+      - ./src/Nurtricenter.WorkerService/bin/Debug/net10.0:/app:ro
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DOTNET_ENVIRONMENT: Production
+      # Joseco.Communication.External.RabbitMQ 1.1.0 ignores the port: the broker must answer on 5672.
+      RabbitMqSettings__Host: "nur-tricenter-rabbitmq"
+      RabbitMqSettings__UserName: "guest"
+      RabbitMqSettings__Password: "guest"
+      RabbitMqSettings__VirtualHost: "/"
+    networks: [nur-tricenter-net]
+    depends_on:
+      rabbitmq:
+        # service_healthy: the outbox processor publishes on its first poll.
+        condition: service_healthy
+    # Not registered in Consul: the worker serves no HTTP. Its liveness is a container
+    # concern — if the OutboxProcessor host dies, the outbox stops draining silently.
+    healthcheck:
+      test: ["CMD-SHELL", "grep -qa Nurtricenter.WorkerService.dll /proc/[0-9]*/cmdline || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+networks:
+  nur-tricenter-net:
+    external: true

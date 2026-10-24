@@ -9,11 +9,19 @@
   <ItemGroup>
     <PackageReference Include="FluentValidation" Version="11.4.0" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.4.0" />
+    <PackageReference Include="Joseco.Communication.External.Contracts" Version="1.0.1" />
+    <PackageReference Include="Joseco.Outbox.Contracts" Version="1.0.2" />
     <PackageReference Include="MediatR" Version="14.2.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
+    <!--
+      Pinned so the whole solution upgrades Joseco.Communication's transitive 1.12.0, which
+      carries advisory GHSA-g94r-2vxg-569j (NU1902).
+    -->
+    <PackageReference Include="OpenTelemetry.Api" Version="1.16.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\contracts\Nurtricenter.Contracts.csproj" />
     <ProjectReference Include="..\Nurtricenter.Core\Nurtricenter.Core.csproj" />
   </ItemGroup>
 
