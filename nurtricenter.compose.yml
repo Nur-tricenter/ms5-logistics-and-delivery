@@ -79,6 +79,12 @@ services:
       RabbitMqSettings__UserName: "guest"
       RabbitMqSettings__Password: "guest"
       RabbitMqSettings__VirtualHost: "/"
+      # Consumer retry policy for ms5.package-validated.
+      RabbitMqSettings__MaxRetryAttempts: "3"
+      RabbitMqSettings__RetryBaseDelayMilliseconds: "500"
+      # The package-validated consumer falls back to the branch when MS3 sends no coordinates.
+      branchCoordinates__latitude: "-17.768853725548713"
+      branchCoordinates__longitude: "-63.18276022365929"
     networks: [nur-tricenter-net]
     depends_on:
       rabbitmq:

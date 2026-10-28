@@ -5,11 +5,13 @@ using Joseco.DDD.Core.Abstractions;
 using Joseco.Outbox.EFCore;
 using Nurtricenter.Application;
 using Nurtricenter.Infrastructure;
+using Nurtricenter.Infrastructure.Messaging;
 using Serilog;
 using Serilog.Enrichers.Span;
 
 /// <summary>
-/// Console host that turns the transactional outbox into published RabbitMQ events.
+/// Console host that turns the transactional outbox into published RabbitMQ events, and consumes the
+/// inbound contracts (today: <c>PackageValidated</c> from MS3).
 /// </summary>
 /// <remarks>
 /// A classic <c>Main</c> rather than top-level statements on purpose: top-level statements would
@@ -39,8 +41,12 @@ public static class Program
         builder.Services.AddInfrastructure(builder.Configuration);
 
         // RabbitMQ producer side: binds RabbitMqSettings, registers it as a singleton and then the
-        // publisher. No consumer is registered on purpose — this host has no inbound contract.
+        // publisher.
         builder.Services.AddNurtricenterRabbitMq(builder.Configuration);
+
+        // RabbitMQ consumer side: ms5.package-validated (MS3) → adds the package to today's route,
+        // through the idempotent inbox. Needs the settings registered just above.
+        builder.Services.AddNurtricenterConsumers();
 
         // The WorkerService is the only host that runs OutboxProcessor<DomainEvent>, so it is the
         // only host that needs the outbox-to-broker publishers. AddApplication() deliberately
@@ -58,10 +64,11 @@ public static class Program
         // stored CorrelationId, but it wraps every dispatch in a "Joseco.Outbox" activity parented
         // to the row's stored trace. ActivitySource only creates activities when someone listens,
         // so this listener is what makes Activity.Current carry the original trace id into the
-        // publish handlers (see OutboxCorrelation).
+        // publish handlers (see OutboxCorrelation). It also listens to the consumers' source, so a
+        // consumed message has an Activity.Current and the outbox rows its handler stages get stamped.
         ActivitySource.AddActivityListener(new ActivityListener
         {
-            ShouldListenTo = source => source.Name == "Joseco.Outbox",
+            ShouldListenTo = source => source.Name is "Joseco.Outbox" or MessagingTelemetry.ActivitySourceName,
             Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded
         });
 
