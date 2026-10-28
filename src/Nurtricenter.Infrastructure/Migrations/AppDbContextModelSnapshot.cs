@@ -143,6 +143,33 @@ namespace Nurtricenter.Infrastructure.Migrations
                     b.ToTable("Routes", (string)null);
                 });
 
+            modelBuilder.Entity("Nurtricenter.Infrastructure.Messaging.InboxMessage", b =>
+                {
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("MessageCreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MessageType")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("ProcessedOn")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("MessageId");
+
+                    b.HasIndex("ProcessedOn");
+
+                    b.ToTable("InboxMessages", (string)null);
+                });
+
             modelBuilder.Entity("Nurtricenter.Core.Domain.Delivery.Delivery", b =>
                 {
                     b.HasOne("Nurtricenter.Core.Domain.Route.Route", null)

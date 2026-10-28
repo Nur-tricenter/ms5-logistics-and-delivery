@@ -6,7 +6,7 @@
     projects can drift apart on.
 
     The worker is the single host that runs the transactional outbox processor and publishes the
-    integration events to RabbitMQ. It is a pure producer: no consumer is registered.
+    integration events to RabbitMQ. It is also the only host that consumes: ms5.package-validated.
   -->
 
   <PropertyGroup>

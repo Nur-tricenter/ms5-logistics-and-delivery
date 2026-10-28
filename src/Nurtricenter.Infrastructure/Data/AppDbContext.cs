@@ -6,6 +6,7 @@ using Joseco.Outbox.EFCore.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Nurtricenter.Core.Domain.Courier;
 using Nurtricenter.Core.Domain.Route;
+using Nurtricenter.Infrastructure.Messaging;
 
 public sealed class AppDbContext : DbContext
 {
@@ -22,6 +23,12 @@ public sealed class AppDbContext : DbContext
     /// <see cref="UnitOfWork"/>. The schema is fixed by Joseco.Outbox.EFCore (outbox.outboxMessage).
     /// </summary>
     public DbSet<OutboxMessage<DomainEvent>> OutboxMessages => Set<OutboxMessage<DomainEvent>>();
+
+    /// <summary>
+    /// Integration messages already consumed, keyed by message id. Written by
+    /// <see cref="IdempotentConsumer{T,TInner}"/> in the same transaction as the handler's changes.
+    /// </summary>
+    public DbSet<InboxMessage> InboxMessages => Set<InboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
