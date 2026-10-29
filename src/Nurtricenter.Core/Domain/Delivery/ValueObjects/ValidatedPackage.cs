@@ -8,9 +8,10 @@ public sealed record ValidatedPackage
 {
     public string PackageId { get; }
     public string PatientId { get; }
+    public string PatientName { get; }
     public string LabelData { get; }
 
-    public ValidatedPackage(string packageId, string patientId, string labelData)
+    public ValidatedPackage(string packageId, string patientId, string patientName, string labelData)
     {
         if (string.IsNullOrWhiteSpace(packageId))
             throw new DomainException(
@@ -26,6 +27,13 @@ public sealed record ValidatedPackage
                     "Patient ID cannot be empty.",
                     ErrorType.Validation));
 
+        if (string.IsNullOrWhiteSpace(patientName))
+            throw new DomainException(
+                new Error(
+                    "ValidatedPackage.EmptyPatientName",
+                    "Patient name cannot be empty.",
+                    ErrorType.Validation));
+
         if (string.IsNullOrWhiteSpace(labelData))
             throw new DomainException(
                 new Error(
@@ -35,6 +43,7 @@ public sealed record ValidatedPackage
 
         PackageId = packageId;
         PatientId = patientId;
+        PatientName = patientName;
         LabelData = labelData;
     }
 

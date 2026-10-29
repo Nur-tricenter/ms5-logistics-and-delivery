@@ -29,9 +29,11 @@ public class PackageValidatedConsumerTests
     {
         PackageId = Guid.NewGuid(),
         PatientId = Guid.NewGuid(),
+        PatientName = "Juan Perez",
         ProductionOrderId = Guid.NewGuid(),
         CatalogPlanId = Guid.NewGuid(),
-        ReleasedAt = DateTime.UtcNow,
+        ReleasedAt = new DateTime(2026, 10, 28, 15, 0, 0, DateTimeKind.Utc),
+        DeliveryDate = new DateOnly(2026, 10, 29),
         DeliveryAddress = "Av. Banzer 123, Santa Cruz",
         TrackingNumber = trackingNumber,
         Latitude = -17.78,
@@ -48,10 +50,34 @@ public class PackageValidatedConsumerTests
         _sent.Should().Be(new AddValidatedPackageCommand(
             message.PackageId.ToString(),
             message.PatientId.ToString(),
+            message.PatientName,
+            message.DeliveryDate,
             message.DeliveryAddress,
             message.Latitude,
             message.Longitude,
             message.TrackingNumber));
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithoutDeliveryDate_UsesTheDayAfterRelease()
+    {
+        var message = MakeMessage() with { DeliveryDate = DateOnly.MinValue };
+
+        await _consumer.HandleAsync(message);
+
+        _sent!.DeliveryDate.Should().Be(new DateOnly(2026, 10, 29));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task HandleAsync_WithoutPatientName_UsesThePatientId(string patientName)
+    {
+        var message = MakeMessage() with { PatientName = patientName };
+
+        await _consumer.HandleAsync(message);
+
+        _sent!.PatientName.Should().Be(message.PatientId.ToString());
     }
 
     [Theory]

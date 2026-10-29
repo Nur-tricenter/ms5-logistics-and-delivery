@@ -15,6 +15,7 @@ public sealed class AddDeliveries(IMediator mediator) : EndpointBaseAsync
     {
         var items = request.Select(r => new AddDeliveryItem(
                 r.PatientId,
+                r.PatientName,
                 r.PackageDetails.PackageId,
                 r.PackageDetails.Destination.Address,
                 r.PackageDetails.Destination.AddressCoordinates.Lat,

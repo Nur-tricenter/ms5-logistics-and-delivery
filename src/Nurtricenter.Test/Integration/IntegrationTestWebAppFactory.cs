@@ -7,15 +7,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Moq;
-using Nurtricenter.Core.Interfaces.Services.ClinicService;
 using Nurtricenter.Infrastructure.Data;
 using Nurtricenter.Infrastructure.ServiceDiscovery;
 
 public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>
 {
-    public Mock<IClinicService> ClinicServiceMock { get; } = new Mock<IClinicService> { DefaultValue = DefaultValue.Mock };
-
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         // Blanks ServiceRegistration:ServiceDiscoveryAddress for the test host. This is not
@@ -50,9 +46,6 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>
             string dbName = "TestDb_" + Guid.NewGuid().ToString();
             services.AddDbContext<AppDbContext>(options =>
                 options.UseInMemoryDatabase(dbName));
-
-            services.RemoveAll(typeof(IClinicService));
-            services.AddSingleton(ClinicServiceMock.Object);
         });
     }
 }

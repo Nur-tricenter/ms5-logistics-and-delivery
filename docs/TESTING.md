@@ -48,9 +48,8 @@ We use `WebApplicationFactory` to host the API in-memory.
 - **Database Pivot**: We explicitly strip out PostgreSQL (`Npgsql`) configurations from the Dependency Injection (DI) container and replace them with `UseInMemoryDatabase`. This ensures the test suite runs blazingly fast and works seamlessly in environments without Docker daemons (bypassing the need for `Testcontainers`).
 - **Scoping & Isolation**: To ensure complete test isolation, the Factory generates a unique Database Name via `Guid.NewGuid()` per test suite run. Additionally, our `BaseIntegrationTest` implements a `ClearDatabaseAsync` method that resets the `Routes` and `Couriers` tables before every single test run.
 
-### Mocking External Boundaries
-The system communicates with an external Clinic API to retrieve patient names (`IClinicService`).
-- **Key Decision**: In integration tests, we do not want to make real HTTP calls to external boundaries. We inject a Singleton `Mock<IClinicService>` into the test DI container. Tests then configure this mock to return controlled patient data, allowing us to seamlessly test endpoints like `GET /api/v1/couriers/{id}/route/today` without flakiness or external dependencies.
+### External Boundaries
+MS5 makes no outbound HTTP calls at request time: patient names arrive with the `PackageValidated` event (or in the body of `POST /api/v1/packages/deliveries`) and are stored with each delivery.
 
 ---
 

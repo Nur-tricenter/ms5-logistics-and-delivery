@@ -53,6 +53,7 @@ classDiagram
         &lt;&lt;ValueObject&gt;&gt;
         +string PackageId
         +string PatientId
+        +string PatientName
         +string LabelData
     }
 
@@ -134,7 +135,7 @@ classDiagram
 
 | Interface | Base | Key methods beyond base |
 |---|---|---|
-| `IRouteRepository` | `IRepository<Route>` | `GetAllAsync`, `GetLatestRouteForTodayAsync`, `GetByCourierAndDateAsync`, `UpdateAsync`, `DeleteAsync` |
+| `IRouteRepository` | `IRepository<Route>` | `GetAllAsync`, `GetLatestRouteForDateAsync`, `GetByCourierAndDateAsync`, `UpdateAsync`, `DeleteAsync` |
 | `ICourierRepository` | _(standalone)_ | `GetByIdAsync`, `GetAllAsync`, `GetByStatusAsync`, `AddAsync`, `UpdateAsync`, `DeleteAsync` |
 
 > **Note:** `Delivery` has no repository and no `DbSet`. All persistence goes through `Route` (the aggregate root).

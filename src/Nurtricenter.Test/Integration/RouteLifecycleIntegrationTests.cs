@@ -7,8 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Nurtricenter.Core.Domain.Route.Enums;
-using Nurtricenter.Core.Interfaces.Services.ClinicService;
-using Nurtricenter.Core.Interfaces.Services.ClinicService.Dto;
 using Nurtricenter.Infrastructure.Data;
 
 [Collection("Integration")]

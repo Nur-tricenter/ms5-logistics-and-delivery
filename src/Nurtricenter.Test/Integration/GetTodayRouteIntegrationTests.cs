@@ -34,7 +34,7 @@ public class GetTodayRouteIntegrationTests : BaseIntegrationTest
             
             var route = new Route(routeId, courierId, DateOnly.FromDateTime(DateTime.Today));
             
-            var package = new ValidatedPackage("PKG-1", "PAT-1", "label");
+            var package = new ValidatedPackage("PKG-1", "PAT-1", "Patient One", "label");
             var address = new DeliveryAddress("123 Test St", new Coordinate(1.0, 1.0));
             route.AddDelivery(package, address);
             route.StartRoute(new Coordinate(0.0, 0.0));

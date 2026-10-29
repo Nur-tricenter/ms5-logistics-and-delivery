@@ -48,6 +48,11 @@ public sealed class DeliveryConfiguration : IEntityTypeConfiguration<Delivery>
                 .IsRequired()
                 .HasColumnName("PatientId");
 
+            package.Property(p => p.PatientName)
+                .HasMaxLength(200)
+                .IsRequired()
+                .HasColumnName("PatientName");
+
             package.Property(p => p.LabelData)
                 .HasMaxLength(500)
                 .IsRequired()

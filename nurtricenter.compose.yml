@@ -37,7 +37,6 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
-      ClinicService__BaseUrl: "https://763708cb-6809-4a65-be56-fe140385a461.mock.pstmn.io"
       branchCoordinates__latitude: "-17.768853725548713"
       branchCoordinates__longitude: "-63.18276022365929"
       HttpsRedirection__Enabled: "false"

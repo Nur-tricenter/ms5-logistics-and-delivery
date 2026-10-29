@@ -7,12 +7,12 @@ using Nur.Tricenter.Integration.Messages.Contracting;
 using Nurtricenter.Application.Commands.Deliveries.AddValidatedPackage;
 
 /// <summary>
-/// <c>ms5.package-validated</c> → adds the package MS3's quality control just released to today's
-/// route. This is the event-driven replacement for <c>POST /api/v1/packages/deliveries</c>, which
-/// stays as a manual fallback.
+/// <c>ms5.package-validated</c> → adds the package MS3's quality control just released to the route of
+/// its delivery date. This is the event-driven replacement for <c>POST /api/v1/packages/deliveries</c>,
+/// which stays as a manual fallback.
 /// </summary>
 /// <remarks>
-/// A missing route for today throws: the message is retried and, once retries are exhausted, parked in
+/// A missing route for the delivery date throws: the message is retried and, once retries are exhausted, parked in
 /// the queue's error queue, so an operator can create the route and requeue it.
 /// </remarks>
 public sealed class PackageValidatedConsumer(
@@ -30,9 +30,31 @@ public sealed class PackageValidatedConsumer(
             labelData = packageId;
         }
 
+        var patientId = message.PatientId.ToString();
+        var patientName = message.PatientName;
+
+        if (string.IsNullOrWhiteSpace(patientName))
+        {
+            logger.LogWarning("Package {PackageId} has no patient name; using the patient id instead.", packageId);
+            patientName = patientId;
+        }
+
+        var deliveryDate = message.DeliveryDate;
+
+        if (deliveryDate == DateOnly.MinValue)
+        {
+            // A publisher older than kernel 1.3.0 sends no date; MS3 produces for the day after release.
+            deliveryDate = DateOnly.FromDateTime(message.ReleasedAt.AddDays(1));
+            logger.LogWarning(
+                "Package {PackageId} has no delivery date; assuming {DeliveryDate} (the day after its release).",
+                packageId, deliveryDate);
+        }
+
         var command = new AddValidatedPackageCommand(
             packageId,
-            message.PatientId.ToString(),
+            patientId,
+            patientName,
+            deliveryDate,
             message.DeliveryAddress,
             message.Latitude,
             message.Longitude,

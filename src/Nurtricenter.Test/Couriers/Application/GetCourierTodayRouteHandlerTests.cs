@@ -9,26 +9,21 @@ using Nurtricenter.Core.Domain.Courier.Repositories;
 using Nurtricenter.Core.Domain.Delivery.ValueObjects;
 using Nurtricenter.Core.Domain.Route;
 using Nurtricenter.Core.Domain.Route.Repositories;
-using Nurtricenter.Core.Interfaces.Services.ClinicService;
-using Nurtricenter.Core.Interfaces.Services.ClinicService.Dto;
 
 public class GetCourierTodayRouteHandlerTests
 {
     private readonly Mock<ICourierRepository> _courierRepositoryMock;
     private readonly Mock<IRouteRepository> _routeRepositoryMock;
-    private readonly Mock<IClinicService> _clinicServiceMock;
     private readonly GetCourierTodayRouteHandler _handler;
 
     public GetCourierTodayRouteHandlerTests()
     {
         _courierRepositoryMock = new Mock<ICourierRepository>();
         _routeRepositoryMock = new Mock<IRouteRepository>();
-        _clinicServiceMock = new Mock<IClinicService>();
 
         _handler = new GetCourierTodayRouteHandler(
             _courierRepositoryMock.Object,
-            _routeRepositoryMock.Object,
-            _clinicServiceMock.Object);
+            _routeRepositoryMock.Object);
     }
 
     // ──────────────────────────────────────────────────────────────────────
@@ -92,11 +87,10 @@ public class GetCourierTodayRouteHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenPatientNameIsFoundInClinicService_MapsPatientNameCorrectly()
+    public async Task Handle_WithDelivery_ReturnsPatientNameStoredOnThePackage()
     {
         // Arrange
         var courierId = Guid.NewGuid();
-        const string patientId = "PAT-001";
         const string expectedName = "John Doe";
 
         var courier = new Courier(courierId, "Courier One");
@@ -104,7 +98,7 @@ public class GetCourierTodayRouteHandlerTests
         var route = new Route(Guid.NewGuid(), courierId, today);
 
         route.AddDelivery(
-            new ValidatedPackage("PKG-001", patientId, "label-data"),
+            new ValidatedPackage("PKG-001", "PAT-001", expectedName, "label-data"),
             new DeliveryAddress("123 Main St", new Coordinate(1.0, 2.0)));
 
         _courierRepositoryMock
@@ -115,10 +109,6 @@ public class GetCourierTodayRouteHandlerTests
             .Setup(r => r.GetByCourierAndDateAsync(courierId, today, It.IsAny<CancellationToken>()))
             .ReturnsAsync(route);
 
-        _clinicServiceMock
-            .Setup(s => s.GetPatientsContactInfoAsync(It.IsAny<IReadOnlyList<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<PatientContactInfo> { new(patientId, "555-0000", expectedName) });
-
         var query = new GetCourierTodayRouteQuery(courierId);
 
         // Act
@@ -126,42 +116,6 @@ public class GetCourierTodayRouteHandlerTests
 
         // Assert
         result.Deliveries[0].PatientName.Should().Be(expectedName);
-    }
-
-    [Fact]
-    public async Task Handle_WhenPatientNotFoundInClinicService_FallsBackToPatientId()
-    {
-        // Arrange
-        var courierId = Guid.NewGuid();
-        const string patientId = "PAT-UNKNOWN";
-
-        var courier = new Courier(courierId, "Courier One");
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        var route = new Route(Guid.NewGuid(), courierId, today);
-
-        route.AddDelivery(
-            new ValidatedPackage("PKG-002", patientId, "label-data"),
-            new DeliveryAddress("456 Oak Ave", new Coordinate(3.0, 4.0)));
-
-        _courierRepositoryMock
-            .Setup(r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(courier);
-
-        _routeRepositoryMock
-            .Setup(r => r.GetByCourierAndDateAsync(courierId, today, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(route);
-
-        _clinicServiceMock
-            .Setup(s => s.GetPatientsContactInfoAsync(It.IsAny<IReadOnlyList<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<PatientContactInfo>());
-
-        var query = new GetCourierTodayRouteQuery(courierId);
-
-        // Act
-        var result = await _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        result.Deliveries[0].PatientName.Should().Be(patientId);
     }
 
     [Fact]
@@ -176,7 +130,7 @@ public class GetCourierTodayRouteHandlerTests
         var route = new Route(Guid.NewGuid(), courierId, today);
 
         route.AddDelivery(
-            new ValidatedPackage("PKG-003", "PAT-002", "label"),
+            new ValidatedPackage("PKG-003", "PAT-002", "Patient Two", "label"),
             new DeliveryAddress(expectedAddress, new Coordinate(5.0, 6.0)));
 
         _courierRepositoryMock
@@ -186,10 +140,6 @@ public class GetCourierTodayRouteHandlerTests
         _routeRepositoryMock
             .Setup(r => r.GetByCourierAndDateAsync(courierId, today, It.IsAny<CancellationToken>()))
             .ReturnsAsync(route);
-
-        _clinicServiceMock
-            .Setup(s => s.GetPatientsContactInfoAsync(It.IsAny<IReadOnlyList<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<PatientContactInfo>());
 
         var query = new GetCourierTodayRouteQuery(courierId);
 
@@ -259,50 +209,6 @@ public class GetCourierTodayRouteHandlerTests
         // Assert
         _routeRepositoryMock.Verify(
             r => r.GetByCourierAndDateAsync(courierId, today, It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
-
-    [Fact]
-    public async Task Handle_WithTwoDeliveriesSharingPatientId_CallsClinicServiceWithOneDistinctPatientId()
-    {
-        // Arrange
-        var courierId = Guid.NewGuid();
-        const string sharedPatientId = "PAT-SHARED";
-
-        var courier = new Courier(courierId, "Courier Three");
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        var route = new Route(Guid.NewGuid(), courierId, today);
-
-        route.AddDelivery(
-            new ValidatedPackage("PKG-A", sharedPatientId, "lbl"),
-            new DeliveryAddress("Addr A", new Coordinate(1.0, 1.0)));
-
-        route.AddDelivery(
-            new ValidatedPackage("PKG-B", sharedPatientId, "lbl"),
-            new DeliveryAddress("Addr B", new Coordinate(2.0, 2.0)));
-
-        _courierRepositoryMock
-            .Setup(r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(courier);
-
-        _routeRepositoryMock
-            .Setup(r => r.GetByCourierAndDateAsync(courierId, today, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(route);
-
-        _clinicServiceMock
-            .Setup(s => s.GetPatientsContactInfoAsync(It.IsAny<IReadOnlyList<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<PatientContactInfo>());
-
-        var query = new GetCourierTodayRouteQuery(courierId);
-
-        // Act
-        await _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        _clinicServiceMock.Verify(
-            s => s.GetPatientsContactInfoAsync(
-                It.Is<IReadOnlyList<string>>(ids => ids.Count == 1 && ids[0] == sharedPatientId),
-                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -376,32 +282,6 @@ public class GetCourierTodayRouteHandlerTests
             .Where(ex => ex.Error.Code == "Route.NoRouteForToday");
     }
 
-    [Fact]
-    public async Task Handle_WhenNoRouteForToday_DoesNotCallClinicService()
-    {
-        // Arrange
-        var courierId = Guid.NewGuid();
-        var courier = new Courier(courierId, "Courier Five");
-
-        _courierRepositoryMock
-            .Setup(r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(courier);
-
-        _routeRepositoryMock
-            .Setup(r => r.GetByCourierAndDateAsync(courierId, It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Route?)null);
-
-        var query = new GetCourierTodayRouteQuery(courierId);
-
-        // Act
-        try { await _handler.Handle(query, CancellationToken.None); } catch { /* expected */ }
-
-        // Assert
-        _clinicServiceMock.Verify(
-            s => s.GetPatientsContactInfoAsync(It.IsAny<IReadOnlyList<string>>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-    }
-
     // ──────────────────────────────────────────────────────────────────────
     // Private helpers
     // ──────────────────────────────────────────────────────────────────────
@@ -420,7 +300,7 @@ public class GetCourierTodayRouteHandlerTests
 
         for (int i = 1; i <= deliveryCount; i++)
         {
-            var package = new ValidatedPackage($"PKG-{i:000}", $"PAT-{i:000}", $"label-{i}");
+            var package = new ValidatedPackage($"PKG-{i:000}", $"PAT-{i:000}", $"Patient {i}", $"label-{i}");
             var address = new DeliveryAddress($"Street {i}", new Coordinate(i * 1.0, i * 2.0));
             route.AddDelivery(package, address);
         }
@@ -432,14 +312,6 @@ public class GetCourierTodayRouteHandlerTests
         _routeRepositoryMock
             .Setup(r => r.GetByCourierAndDateAsync(courierId, today, It.IsAny<CancellationToken>()))
             .ReturnsAsync(route);
-
-        var patients = Enumerable.Range(1, deliveryCount)
-            .Select(i => new PatientContactInfo($"PAT-{i:000}", $"555-{i:0000}", $"Patient {i}"))
-            .ToList();
-
-        _clinicServiceMock
-            .Setup(s => s.GetPatientsContactInfoAsync(It.IsAny<IReadOnlyList<string>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(patients);
 
         return (new GetCourierTodayRouteQuery(courierId), route);
     }

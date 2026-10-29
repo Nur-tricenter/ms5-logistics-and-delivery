@@ -28,7 +28,7 @@ public sealed class RouteRepository : IRouteRepository
     public async Task<IReadOnlyList<Route>> GetAllAsync(CancellationToken cancellationToken = default)
         => await _context.Routes.Include(r => r.Deliveries).AsNoTracking().ToListAsync(cancellationToken);
 
-    public async Task<Route?> GetLatestRouteForTodayAsync(DateOnly date, CancellationToken cancellationToken = default)
+    public async Task<Route?> GetLatestRouteForDateAsync(DateOnly date, CancellationToken cancellationToken = default)
         => await _context.Routes
             .Include(r => r.Deliveries)
             .Where(r => r.ScheduledDate == date)

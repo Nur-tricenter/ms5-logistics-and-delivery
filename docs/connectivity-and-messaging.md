@@ -149,7 +149,7 @@ exchanges. All exchange names live in `contracts/NurtricenterExchanges.cs`.
 ### 2.6 Inbound: `package-validated` (MS3) → add the package to today's route
 
 When MS3's quality control approves a package, MS3 publishes `PackageValidated`
-(`Nur.Tricenter.Integration.Messages.Contracting`, kernel **1.2.0**) to the `package-validated`
+(`Nur.Tricenter.Integration.Messages.Contracting`, kernel **1.3.0**) to the `package-validated`
 fanout exchange. The queue `ms5.package-validated` and its binding are declared by
 `nur-tricenter-local/topology/rabbitmq-definitions.json`, **not** by ms5. The worker consumes it.
 This is the event-driven replacement for `POST /api/v1/packages/deliveries`, which stays as a
@@ -163,19 +163,21 @@ ms5.package-validated
                          InboxMessage row in the scoped AppDbContext
   → PackageValidatedConsumer
   → AddValidatedPackageCommand (MediatR)
-      → today's latest route (same rule as the endpoint), route.AddDelivery(...)
+      → latest route for the message's DeliveryDate, route.AddDelivery(...)
       → UnitOfWork.CommitAsync: inbox row + new Delivery + DeliveryAddedToRoute outbox row, ONE transaction
 ```
 
-Field mapping: `PackageId`/`PatientId` → `ValidatedPackage` (as strings), `TrackingNumber` →
+Field mapping: `PackageId`/`PatientId`/`PatientName` → `ValidatedPackage` (ids as strings; the patient id is
+used if the name is empty), `DeliveryDate` → the route date (`ReleasedAt` + 1 day if a pre-1.3.0 publisher
+sent none), `TrackingNumber` →
 `LabelData` (the `PackageId` is used if it is empty), `DeliveryAddress` → `DeliveryAddress.Description`.
 
 | Situation | Behaviour |
 |---|---|
 | `Latitude`/`Longitude` null (MS3 found no matching calendar) | Falls back to `branchCoordinates`, with a warning |
-| No route for today, or today's route is completed/cancelled | The handler throws, the inbox row is discarded with the rest of the transaction, the library retries (`MaxRetryAttempts`) and then dead-letters the message. Create the route and requeue it |
+| No route for the delivery date, or that route is completed/cancelled | The handler throws, the inbox row is discarded with the rest of the transaction, the library retries (`MaxRetryAttempts`) and then dead-letters the message. Create the route and requeue it |
 | Same message delivered twice (same `Id`; MS3 republishes with its outbox row id) | Skipped: "already in the inbox" |
-| Patient unknown to MS1 | Not checked on this path (MS3 already validated the package). The courier still sees the patient's name from MS1 in `GET …/route/today` |
+| Patient unknown to MS1 | Not checked (MS3 already validated the package). MS5 never calls MS1: the courier sees the `PatientName` stored with the delivery in `GET …/route/today` |
 
 The worker therefore needs `branchCoordinates__latitude`/`__longitude` too, and the `InboxMessages`
 table must exist (migration `AddInboxMessages`).

@@ -3,22 +3,18 @@ namespace Nurtricenter.Application.Commands.Deliveries.Add;
 using Joseco.DDD.Core.Abstractions;
 using Joseco.DDD.Core.Results;
 using MediatR;
-using Nurtricenter.Core.Interfaces.Services.ClinicService;
 using Nurtricenter.Core.Domain.Delivery.ValueObjects;
 using Nurtricenter.Core.Domain.Route.Repositories;
 
 public sealed class AddDeliveriesHandler : IRequestHandler<AddDeliveriesCommand, AddDeliveriesResponse>
 {
-    private readonly IClinicService _clinicService;
     private readonly IRouteRepository _routeRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public AddDeliveriesHandler(
-        IClinicService clinicService,
         IRouteRepository routeRepository,
         IUnitOfWork unitOfWork)
     {
-        _clinicService = clinicService;
         _routeRepository = routeRepository;
         _unitOfWork = unitOfWork;
     }
@@ -27,27 +23,8 @@ public sealed class AddDeliveriesHandler : IRequestHandler<AddDeliveriesCommand,
         AddDeliveriesCommand request,
         CancellationToken cancellationToken)
     {
-        var patientIds = request.Items
-            .Select(i => i.PatientId)
-            .Distinct()
-            .ToList();
-
-        var patients = await _clinicService.GetPatientsContactInfoAsync(patientIds, cancellationToken);
-
-        if (patients.Count != patientIds.Count)
-        {
-            var foundIds = patients.Select(p => p.PatientId).ToHashSet();
-            var missingIds = patientIds.Where(id => !foundIds.Contains(id)).ToList();
-
-            throw new DomainException(
-                Error.NotFound(
-                    "ClinicService.PatientsNotFound",
-                    "The following patients were not found: {patientIds}.",
-                    string.Join(", ", missingIds)));
-        }
-
         var today = DateOnly.FromDateTime(DateTime.Today);
-        var route = await _routeRepository.GetLatestRouteForTodayAsync(today, cancellationToken);
+        var route = await _routeRepository.GetLatestRouteForDateAsync(today, cancellationToken);
 
         if (route is null)
         {
@@ -62,7 +39,7 @@ public sealed class AddDeliveriesHandler : IRequestHandler<AddDeliveriesCommand,
         {
             var coordinate = new Coordinate(item.Latitude, item.Longitude);
             var address = new DeliveryAddress(item.Address, coordinate);
-            var package = new ValidatedPackage(item.PackageId, item.PatientId, item.AdditionalDetails);
+            var package = new ValidatedPackage(item.PackageId, item.PatientId, item.PatientName, item.AdditionalDetails);
 
             route.AddDelivery(package, address);
         }
