@@ -37,7 +37,8 @@ public class PackageValidatedConsumerTests
         DeliveryAddress = "Av. Banzer 123, Santa Cruz",
         TrackingNumber = trackingNumber,
         Latitude = -17.78,
-        Longitude = -63.18
+        Longitude = -63.18,
+        DeliveryDayId = 7
     };
 
     [Fact]
@@ -55,7 +56,8 @@ public class PackageValidatedConsumerTests
             message.DeliveryAddress,
             message.Latitude,
             message.Longitude,
-            message.TrackingNumber));
+            message.TrackingNumber,
+            message.DeliveryDayId));
     }
 
     [Fact]

@@ -57,6 +57,9 @@ public sealed class DeliveryConfiguration : IEntityTypeConfiguration<Delivery>
                 .HasMaxLength(500)
                 .IsRequired()
                 .HasColumnName("PackageLabelData");
+
+            package.Property(p => p.DeliveryDayId)
+                .HasColumnName("DeliveryDayId");
         });
 
         // ── Value Object: DeliveryAddress ───────────────────────────

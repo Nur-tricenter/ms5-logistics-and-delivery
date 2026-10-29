@@ -37,7 +37,8 @@ public sealed class PublishIntegrationEventWhenDeliveryAddedToRoute : INotificat
             RouteId = deliveryAdded.RouteId,
             DeliveryId = deliveryAdded.DeliveryId,
             PackageId = deliveryAdded.PackageId,
-            PatientId = deliveryAdded.PatientId
+            PatientId = deliveryAdded.PatientId,
+            DeliveryDayId = deliveryAdded.DeliveryDayId
         };
 
         _logger.LogInformation(

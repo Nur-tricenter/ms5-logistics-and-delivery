@@ -8,6 +8,7 @@ using Moq;
 using Nurtricenter.Application.Commands.Deliveries.AddValidatedPackage;
 using Nurtricenter.Core.Domain.Delivery.Enums;
 using Nurtricenter.Core.Domain.Route;
+using Nurtricenter.Core.Domain.Route.Events;
 using Nurtricenter.Core.Domain.Route.Repositories;
 using Nurtricenter.Core.Options;
 using Nurtricenter.Test.Helpers;
@@ -39,7 +40,7 @@ public class AddValidatedPackageHandlerTests
     private static readonly DateOnly DeliveryDate = new(2026, 10, 29);
 
     private static AddValidatedPackageCommand MakeCommand(double? latitude = -17.80, double? longitude = -63.20)
-        => new("PKG-001", "PAT-001", "Juan Perez", DeliveryDate, "Av. Banzer 123", latitude, longitude, "NTR-001");
+        => new("PKG-001", "PAT-001", "Juan Perez", DeliveryDate, "Av. Banzer 123", latitude, longitude, "NTR-001", DeliveryDayId: 7);
 
     private Route ArrangeRouteForDeliveryDate()
     {
@@ -64,6 +65,9 @@ public class AddValidatedPackageHandlerTests
         delivery.Package.PatientId.Should().Be("PAT-001");
         delivery.Package.PatientName.Should().Be("Juan Perez");
         delivery.Package.LabelData.Should().Be("NTR-001");
+        delivery.Package.DeliveryDayId.Should().Be(7);
+        route.DomainEvents.OfType<DeliveryAddedToRouteEvent>()
+            .Should().ContainSingle(e => e.DeliveryId == delivery.Id && e.DeliveryDayId == 7);
         delivery.Address.Description.Should().Be("Av. Banzer 123");
         delivery.Address.PlanarCoordinate.Latitude.Should().Be(-17.80);
 

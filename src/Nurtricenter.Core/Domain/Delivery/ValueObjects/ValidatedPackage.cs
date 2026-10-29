@@ -11,7 +11,13 @@ public sealed record ValidatedPackage
     public string PatientName { get; }
     public string LabelData { get; }
 
-    public ValidatedPackage(string packageId, string patientId, string patientName, string labelData)
+    /// <summary>
+    /// MS4's delivery day this package was produced for; null when MS3 matched no calendar or the
+    /// package was loaded by hand.
+    /// </summary>
+    public int? DeliveryDayId { get; }
+
+    public ValidatedPackage(string packageId, string patientId, string patientName, string labelData, int? deliveryDayId = null)
     {
         if (string.IsNullOrWhiteSpace(packageId))
             throw new DomainException(
@@ -45,6 +51,7 @@ public sealed record ValidatedPackage
         PatientId = patientId;
         PatientName = patientName;
         LabelData = labelData;
+        DeliveryDayId = deliveryDayId;
     }
 
     private ValidatedPackage() { }

@@ -149,7 +149,7 @@ exchanges. All exchange names live in `contracts/NurtricenterExchanges.cs`.
 ### 2.6 Inbound: `package-validated` (MS3) → add the package to today's route
 
 When MS3's quality control approves a package, MS3 publishes `PackageValidated`
-(`Nur.Tricenter.Integration.Messages.Contracting`, kernel **1.3.0**) to the `package-validated`
+(`Nur.Tricenter.Integration.Messages.Contracting`, kernel **1.4.0**) to the `package-validated`
 fanout exchange. The queue `ms5.package-validated` and its binding are declared by
 `nur-tricenter-local/topology/rabbitmq-definitions.json`, **not** by ms5. The worker consumes it.
 This is the event-driven replacement for `POST /api/v1/packages/deliveries`, which stays as a
@@ -169,7 +169,8 @@ ms5.package-validated
 
 Field mapping: `PackageId`/`PatientId`/`PatientName` → `ValidatedPackage` (ids as strings; the patient id is
 used if the name is empty), `DeliveryDate` → the route date (`ReleasedAt` + 1 day if a pre-1.3.0 publisher
-sent none), `TrackingNumber` →
+sent none), `DeliveryDayId` (MS4's day, null if MS3 matched no calendar) → `ValidatedPackage.DeliveryDayId`,
+forwarded in `DeliveryAddedToRoute` so MS4 links the delivery to that day, `TrackingNumber` →
 `LabelData` (the `PackageId` is used if it is empty), `DeliveryAddress` → `DeliveryAddress.Description`.
 
 | Situation | Behaviour |

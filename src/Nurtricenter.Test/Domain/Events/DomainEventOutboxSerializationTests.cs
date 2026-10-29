@@ -33,7 +33,7 @@ public class DomainEventOutboxSerializationTests
             new CourierStatusChangedEvent(courierId, CourierStatus.Available, CourierStatus.OnRoute),
             new RouteCreatedEvent(routeId, courierId, new DateOnly(2026, 10, 21)),
             new CourierAssignedToRouteEvent(routeId, courierId),
-            new DeliveryAddedToRouteEvent(routeId, deliveryId, "package-1", "patient-1"),
+            new DeliveryAddedToRouteEvent(routeId, deliveryId, "package-1", "patient-1", 42),
             new RouteStartedEvent(routeId),
             new RouteCompletedEvent(routeId),
             new RouteCancelledEvent(routeId),

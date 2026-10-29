@@ -111,7 +111,7 @@ public class PublishIntegrationEventHandlersTests
         var handler = new PublishIntegrationEventWhenDeliveryAddedToRoute(
             NullLogger<PublishIntegrationEventWhenDeliveryAddedToRoute>.Instance, _publisher.Object);
 
-        await handler.Handle(WithCorrelation(new DeliveryAddedToRouteEvent(routeId, deliveryId, "package-1", "patient-1")), CancellationToken.None);
+        await handler.Handle(WithCorrelation(new DeliveryAddedToRouteEvent(routeId, deliveryId, "package-1", "patient-1", 42)), CancellationToken.None);
 
         _publisher.Verify(p => p.PublishAsync(
             It.Is<DeliveryAddedToRoute>(c =>
@@ -119,6 +119,7 @@ public class PublishIntegrationEventHandlersTests
                 && c.DeliveryId == deliveryId
                 && c.PackageId == "package-1"
                 && c.PatientId == "patient-1"
+                && c.DeliveryDayId == 42
                 && c.EventType == "Route.DeliveryAdded"),
             NurtricenterExchanges.DeliveryAddedToRoute,
             true), Times.Once);

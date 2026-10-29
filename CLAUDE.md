@@ -71,7 +71,8 @@ Dependency flow: **Api → Application → Core**, **Api → Infrastructure → 
 - **Consumers (worker only)**: `ms5.package-validated` (MS3's `PackageValidated`, kernel namespace
   `Messages.Contracting`) → `PackageValidatedConsumer` → `AddValidatedPackageCommand` (adds the
   package to the latest route of the message's `DeliveryDate`; null coords fall back to `branchCoordinates`;
-  the `PatientName` is stored with the delivery). Pipeline `TracingConsumer → IdempotentConsumer → consumer` (MS4 pattern, registered by
+  the `PatientName` and MS4's `DeliveryDayId` are stored with the delivery, and the day id is forwarded
+  in `DeliveryAddedToRoute` so MS4 can link the delivery to its day). Pipeline `TracingConsumer → IdempotentConsumer → consumer` (MS4 pattern, registered by
   `RabbitMqExtensions.AddNurtricenterConsumers`). The inbox row is staged in the scoped `AppDbContext`
   so the handler's `UnitOfWork.CommitAsync` saves it atomically with the aggregate and outbox rows.
   Queues/bindings are owned by `nur-tricenter-local` topology, never declared here.
@@ -85,7 +86,7 @@ Dependency flow: **Api → Application → Core**, **Api → Infrastructure → 
   still marked processed (guarded by `OutboxProcessorDispatchTests`). The stored `CorrelationId`
   is dropped on re-wrap; `OutboxCorrelation.Resolve` recovers it from the `Joseco.Outbox` activity.
 - The integration contracts come from the shared kernel package `Nur.Tricenter.Integration`
-  1.3.0 (namespaces `Messages.Logistics` published, `Messages.Contracting` consumed), restored from the private
+  1.4.0 (namespaces `Messages.Logistics` published, `Messages.Contracting` consumed), restored from the private
   Nur-tricenter GitHub Packages feed (`NuGet.config`, needs `NUGET_USERNAME`/`NUGET_TOKEN`).
   Changing a contract = a PR to `nur-tricenter-shared-kernels` + a version bump here.
   `contracts/` keeps only `NurtricenterExchanges` (the kernel forbids domain words outside messages).

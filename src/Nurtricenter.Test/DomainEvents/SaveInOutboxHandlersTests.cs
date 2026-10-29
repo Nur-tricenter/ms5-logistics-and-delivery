@@ -35,7 +35,7 @@ public class SaveInOutboxHandlersTests
             { new CourierStatusChangedEvent(courierId, CourierStatus.Available, CourierStatus.OnRoute), typeof(SaveInOutboxWhenCourierStatusChangedEvent) },
             { new RouteCreatedEvent(routeId, courierId, new DateOnly(2026, 10, 21)), typeof(SaveInOutboxWhenRouteCreatedEvent) },
             { new CourierAssignedToRouteEvent(routeId, courierId), typeof(SaveInOutboxWhenCourierAssignedToRouteEvent) },
-            { new DeliveryAddedToRouteEvent(routeId, deliveryId, "package-1", "patient-1"), typeof(SaveInOutboxWhenDeliveryAddedToRouteEvent) },
+            { new DeliveryAddedToRouteEvent(routeId, deliveryId, "package-1", "patient-1", 42), typeof(SaveInOutboxWhenDeliveryAddedToRouteEvent) },
             { new RouteStartedEvent(routeId), typeof(SaveInOutboxWhenRouteStartedEvent) },
             { new RouteCompletedEvent(routeId), typeof(SaveInOutboxWhenRouteCompletedEvent) },
             { new RouteCancelledEvent(routeId), typeof(SaveInOutboxWhenRouteCancelledEvent) },
