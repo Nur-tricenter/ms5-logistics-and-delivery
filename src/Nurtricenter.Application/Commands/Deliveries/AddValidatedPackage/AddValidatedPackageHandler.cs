@@ -10,10 +10,6 @@ using Nurtricenter.Core.Domain.Delivery.ValueObjects;
 using Nurtricenter.Core.Domain.Route.Repositories;
 using Nurtricenter.Core.Options;
 
-/// <remarks>
-/// Deliberately does NOT depend on <c>IClinicService</c>: this handler runs in the WorkerService, which
-/// has no ClinicService configuration, and the patient was already validated upstream by MS3.
-/// </remarks>
 public sealed class AddValidatedPackageHandler : IRequestHandler<AddValidatedPackageCommand, AddDeliveriesResponse>
 {
     private readonly IRouteRepository _routeRepository;
@@ -37,21 +33,20 @@ public sealed class AddValidatedPackageHandler : IRequestHandler<AddValidatedPac
         AddValidatedPackageCommand request,
         CancellationToken cancellationToken)
     {
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        var route = await _routeRepository.GetLatestRouteForTodayAsync(today, cancellationToken);
+        var route = await _routeRepository.GetLatestRouteForDateAsync(request.DeliveryDate, cancellationToken);
 
         if (route is null)
         {
             throw new DomainException(
                 Error.NotFound(
-                    "Route.NoRouteForToday",
-                    "No route found for today ({date}). Create a route first.",
-                    today.ToString("yyyy-MM-dd")));
+                    "Route.NoRouteForDate",
+                    "No route found for {date}. Create a route first.",
+                    request.DeliveryDate.ToString("yyyy-MM-dd")));
         }
 
         var coordinate = ResolveCoordinate(request);
         var address = new DeliveryAddress(request.Address, coordinate);
-        var package = new ValidatedPackage(request.PackageId, request.PatientId, request.LabelData);
+        var package = new ValidatedPackage(request.PackageId, request.PatientId, request.PatientName, request.LabelData);
 
         route.AddDelivery(package, address);
 

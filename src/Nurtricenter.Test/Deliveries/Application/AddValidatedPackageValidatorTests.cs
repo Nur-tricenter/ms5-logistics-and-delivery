@@ -10,15 +10,16 @@ public class AddValidatedPackageValidatorTests
     [Fact]
     public void Validate_WithValidCommand_IsValid()
     {
-        var command = new AddValidatedPackageCommand("PKG-001", "PAT-001", "Av. Banzer 123", null, null, "NTR-001");
+        var command = new AddValidatedPackageCommand(
+            "PKG-001", "PAT-001", "Juan Perez", new DateOnly(2026, 10, 29), "Av. Banzer 123", null, null, "NTR-001");
 
         _validator.Validate(command).IsValid.Should().BeTrue();
     }
 
     [Fact]
-    public void Validate_WithAllRequiredFieldsEmpty_ReturnsFourErrors()
+    public void Validate_WithAllRequiredFieldsEmpty_ReturnsSixErrors()
     {
-        var command = new AddValidatedPackageCommand("", "", "", null, null, "");
+        var command = new AddValidatedPackageCommand("", "", "", DateOnly.MinValue, "", null, null, "");
 
         var result = _validator.Validate(command);
 
@@ -26,6 +27,8 @@ public class AddValidatedPackageValidatorTests
         result.Errors.Select(e => e.PropertyName).Should().BeEquivalentTo(
             nameof(AddValidatedPackageCommand.PackageId),
             nameof(AddValidatedPackageCommand.PatientId),
+            nameof(AddValidatedPackageCommand.PatientName),
+            nameof(AddValidatedPackageCommand.DeliveryDate),
             nameof(AddValidatedPackageCommand.Address),
             nameof(AddValidatedPackageCommand.LabelData));
     }

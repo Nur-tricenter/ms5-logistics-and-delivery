@@ -36,7 +36,7 @@ public static class RouteTestBuilder
     {
         for (int i = startIndex; i < startIndex + count; i++)
         {
-            var package = new ValidatedPackage($"PKG-{i:000}", $"PAT-{i:000}", $"label-{i}");
+            var package = new ValidatedPackage($"PKG-{i:000}", $"PAT-{i:000}", $"Patient {i}", $"label-{i}");
             var address = new DeliveryAddress($"Street {i}", new Coordinate(i * 1.0, i * 2.0));
             route.AddDelivery(package, address);
         }

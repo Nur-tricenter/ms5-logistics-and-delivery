@@ -14,6 +14,14 @@ public sealed class AddValidatedPackageValidator : AbstractValidator<AddValidate
             .NotEmpty()
             .WithMessage("Patient ID is required.");
 
+        RuleFor(x => x.PatientName)
+            .NotEmpty()
+            .WithMessage("Patient name is required.");
+
+        RuleFor(x => x.DeliveryDate)
+            .NotEqual(DateOnly.MinValue)
+            .WithMessage("Delivery date is required.");
+
         RuleFor(x => x.Address)
             .NotEmpty()
             .WithMessage("Address is required.");

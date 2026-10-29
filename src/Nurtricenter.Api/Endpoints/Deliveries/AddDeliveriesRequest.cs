@@ -2,6 +2,7 @@ namespace Nurtricenter.Api.Endpoints.Deliveries;
 
 public sealed record AddDeliveryRequestItem(
     string PatientId,
+    string PatientName,
     PackageDetailsRequest PackageDetails);
 
 public sealed record PackageDetailsRequest(

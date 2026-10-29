@@ -4,22 +4,18 @@ using Joseco.DDD.Core.Results;
 using MediatR;
 using Nurtricenter.Core.Domain.Courier.Repositories;
 using Nurtricenter.Core.Domain.Route.Repositories;
-using Nurtricenter.Core.Interfaces.Services.ClinicService;
 
 public sealed class GetCourierTodayRouteHandler : IRequestHandler<GetCourierTodayRouteQuery, CourierTodayRouteResponse>
 {
     private readonly ICourierRepository _courierRepository;
     private readonly IRouteRepository _routeRepository;
-    private readonly IClinicService _clinicService;
 
     public GetCourierTodayRouteHandler(
         ICourierRepository courierRepository,
-        IRouteRepository routeRepository,
-        IClinicService clinicService)
+        IRouteRepository routeRepository)
     {
         _courierRepository = courierRepository;
         _routeRepository = routeRepository;
-        _clinicService = clinicService;
     }
 
     public async Task<CourierTodayRouteResponse> Handle(
@@ -50,17 +46,12 @@ public sealed class GetCourierTodayRouteHandler : IRequestHandler<GetCourierToda
                     today.ToString("yyyy-MM-dd")));
         }
 
-        var deliveries = route.Deliveries;
-        var patientIds = deliveries.Select(d => d.Package.PatientId).Distinct().ToList();
-
-        var patients = await _clinicService.GetPatientsContactInfoAsync(patientIds, cancellationToken);
-        var patientNameMap = patients.ToDictionary(p => p.PatientId, p => p.FullName);
-
-        var deliveryDtos = deliveries
+        // Deliveries stored before the patient name was captured have an empty one; show the id instead.
+        var deliveryDtos = route.Deliveries
             .Select((d, index) => new TodayDeliveryDto(
                 d.Id,
                 d.SequenceOrder ?? index + 1,
-                patientNameMap.TryGetValue(d.Package.PatientId, out var name) ? name : d.Package.PatientId,
+                string.IsNullOrWhiteSpace(d.Package.PatientName) ? d.Package.PatientId : d.Package.PatientName,
                 d.Address.Description,
                 d.Status.ToString()))
             .ToList();

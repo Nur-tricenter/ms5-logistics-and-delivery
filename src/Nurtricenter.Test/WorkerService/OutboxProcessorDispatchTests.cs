@@ -37,7 +37,6 @@ public class OutboxProcessorDispatchTests
         services.AddInfrastructure(new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ClinicService:BaseUrl"] = "http://localhost"
             })
             .Build());
         services.AddIntegrationMessaging();

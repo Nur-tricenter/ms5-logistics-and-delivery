@@ -196,7 +196,7 @@ public class RouteTests
     private static (ValidatedPackage package, DeliveryAddress address) CreateDeliveryComponents(
         string suffix = "PKG-001")
         => (
-            new ValidatedPackage(suffix, $"PAT-{suffix}", $"label-{suffix}"),
+            new ValidatedPackage(suffix, $"PAT-{suffix}", $"Patient {suffix}", $"label-{suffix}"),
             new DeliveryAddress($"Street {suffix}", new Coordinate(1.0, 2.0))
         );
 

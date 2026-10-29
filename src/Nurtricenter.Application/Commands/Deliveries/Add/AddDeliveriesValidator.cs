@@ -16,6 +16,10 @@ public sealed class AddDeliveriesValidator : AbstractValidator<AddDeliveriesComm
                 .NotEmpty()
                 .WithMessage("Patient ID is required.");
 
+            item.RuleFor(x => x.PatientName)
+                .NotEmpty()
+                .WithMessage("Patient name is required.");
+
             item.RuleFor(x => x.PackageId)
                 .NotEmpty()
                 .WithMessage("Package ID is required.");

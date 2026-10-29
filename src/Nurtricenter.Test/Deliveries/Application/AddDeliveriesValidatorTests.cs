@@ -8,7 +8,7 @@ public class AddDeliveriesValidatorTests
     private readonly AddDeliveriesValidator _validator = new();
 
     private static AddDeliveryItem ValidItem(string patientId = "PAT-001", string packageId = "PKG-001")
-        => new(patientId, packageId, "123 Main St", 1.0, 2.0, "details");
+        => new(patientId, "Patient One", packageId, "123 Main St", 1.0, 2.0, "details");
 
     [Fact]
     public void Validate_WithValidCommand_IsValid()
@@ -51,6 +51,16 @@ public class AddDeliveriesValidatorTests
         result.Errors.Should().ContainSingle(e => e.ErrorMessage == "Patient ID is required.");
     }
 
+    // PatientName rules
+
+    [Fact]
+    public void Validate_WithEmptyPatientName_ReturnsPatientNameRequiredMessage()
+    {
+        var item = new AddDeliveryItem("PAT-001", "", "PKG-001", "123 Main St", 1.0, 2.0, "details");
+        var result = _validator.Validate(new AddDeliveriesCommand(new[] { item }));
+        result.Errors.Should().ContainSingle(e => e.ErrorMessage == "Patient name is required.");
+    }
+
     // PackageId rules
 
     [Fact]
@@ -74,7 +84,7 @@ public class AddDeliveriesValidatorTests
     [Fact]
     public void Validate_WithEmptyAddress_IsInvalid()
     {
-        var item = new AddDeliveryItem("PAT-001", "PKG-001", "", 1.0, 2.0, "details");
+        var item = new AddDeliveryItem("PAT-001", "Patient One", "PKG-001", "", 1.0, 2.0, "details");
         var result = _validator.Validate(new AddDeliveriesCommand(new[] { item }));
         result.IsValid.Should().BeFalse();
     }
@@ -82,7 +92,7 @@ public class AddDeliveriesValidatorTests
     [Fact]
     public void Validate_WithEmptyAddress_ReturnsAddressRequiredMessage()
     {
-        var item = new AddDeliveryItem("PAT-001", "PKG-001", "", 1.0, 2.0, "details");
+        var item = new AddDeliveryItem("PAT-001", "Patient One", "PKG-001", "", 1.0, 2.0, "details");
         var result = _validator.Validate(new AddDeliveriesCommand(new[] { item }));
         result.Errors.Should().ContainSingle(e => e.ErrorMessage == "Address is required.");
     }
@@ -90,10 +100,10 @@ public class AddDeliveriesValidatorTests
     // Combined failures on one item
 
     [Fact]
-    public void Validate_WithAllFieldsEmptyOnOneItem_ReturnsThreeErrors()
+    public void Validate_WithAllFieldsEmptyOnOneItem_ReturnsFourErrors()
     {
-        var item = new AddDeliveryItem("", "", "", 0.0, 0.0, "");
+        var item = new AddDeliveryItem("", "", "", "", 0.0, 0.0, "");
         var result = _validator.Validate(new AddDeliveriesCommand(new[] { item }));
-        result.Errors.Should().HaveCount(3); // PatientId, PackageId, Address
+        result.Errors.Should().HaveCount(4); // PatientId, PatientName, PackageId, Address
     }
 }
