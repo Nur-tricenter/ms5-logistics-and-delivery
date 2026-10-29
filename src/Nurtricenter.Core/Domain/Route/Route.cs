@@ -72,7 +72,7 @@ public sealed class Route : AggregateRoot
 
         _deliveries.Add(delivery);
 
-        AddDomainEvent(new DeliveryAddedToRouteEvent(Id, delivery.Id, package.PackageId, package.PatientId));
+        AddDomainEvent(new DeliveryAddedToRouteEvent(Id, delivery.Id, package.PackageId, package.PatientId, package.DeliveryDayId));
     }
 
     public void StartRoute(Coordinate startingPoint)
