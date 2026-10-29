@@ -255,6 +255,10 @@ namespace Nurtricenter.Infrastructure.Migrations
                             b1.Property<Guid>("DeliveryId")
                                 .HasColumnType("uuid");
 
+                            b1.Property<int?>("DeliveryDayId")
+                                .HasColumnType("integer")
+                                .HasColumnName("DeliveryDayId");
+
                             b1.Property<string>("LabelData")
                                 .IsRequired()
                                 .HasMaxLength(500)
