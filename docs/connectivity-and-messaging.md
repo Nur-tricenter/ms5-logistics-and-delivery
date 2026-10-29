@@ -18,6 +18,7 @@ The platform connects microservices in two independent ways:
 |---|---|---|
 | **Consul + YARP gateway** | inbound HTTP | The shared gateway (`nur-tricenter-api-gateway`) discovers healthy service instances in Consul and routes `/api/{service}/*` to them. No static route table exists — registration IS routing. |
 | **RabbitMQ fanout exchanges** | outbound events | Every domain fact the service produces is published as an integration event through a transactional outbox, so no event can be lost or invented around a crash. |
+| **RabbitMQ consumer queue** | inbound events | `ms5.package-validated`: every package MS3's quality control releases is added to today's route, through an idempotent inbox (§2.6). |
 
 Both mechanisms are **opt-in through configuration** and degrade gracefully: with no Consul
 address configured the service simply runs unreachable through the gateway; with no broker the
@@ -144,6 +145,40 @@ Every published message extends `Joseco.Communication.External.Contracts.Message
 
 Per-consumer queues are created by the consuming microservices themselves against these
 exchanges. All exchange names live in `contracts/NurtricenterExchanges.cs`.
+
+### 2.6 Inbound: `package-validated` (MS3) → add the package to today's route
+
+When MS3's quality control approves a package, MS3 publishes `PackageValidated`
+(`Nur.Tricenter.Integration.Messages.Contracting`, kernel **1.2.0**) to the `package-validated`
+fanout exchange. The queue `ms5.package-validated` and its binding are declared by
+`nur-tricenter-local/topology/rabbitmq-definitions.json`, **not** by ms5. The worker consumes it.
+This is the event-driven replacement for `POST /api/v1/packages/deliveries`, which stays as a
+manual fallback.
+
+```
+ms5.package-validated
+  → TracingConsumer      rabbitmq.consume span (source "Nurtricenter.Messaging"; the worker listens to it,
+                         so Activity.Current exists and OutboxTracingService stamps the new outbox row)
+  → IdempotentConsumer   skips the message if its Id is already in InboxMessages; otherwise stages the
+                         InboxMessage row in the scoped AppDbContext
+  → PackageValidatedConsumer
+  → AddValidatedPackageCommand (MediatR)
+      → today's latest route (same rule as the endpoint), route.AddDelivery(...)
+      → UnitOfWork.CommitAsync: inbox row + new Delivery + DeliveryAddedToRoute outbox row, ONE transaction
+```
+
+Field mapping: `PackageId`/`PatientId` → `ValidatedPackage` (as strings), `TrackingNumber` →
+`LabelData` (the `PackageId` is used if it is empty), `DeliveryAddress` → `DeliveryAddress.Description`.
+
+| Situation | Behaviour |
+|---|---|
+| `Latitude`/`Longitude` null (MS3 found no matching calendar) | Falls back to `branchCoordinates`, with a warning |
+| No route for today, or today's route is completed/cancelled | The handler throws, the inbox row is discarded with the rest of the transaction, the library retries (`MaxRetryAttempts`) and then dead-letters the message. Create the route and requeue it |
+| Same message delivered twice (same `Id`; MS3 republishes with its outbox row id) | Skipped: "already in the inbox" |
+| Patient unknown to MS1 | Not checked on this path (MS3 already validated the package). The courier still sees the patient's name from MS1 in `GET …/route/today` |
+
+The worker therefore needs `branchCoordinates__latitude`/`__longitude` too, and the `InboxMessages`
+table must exist (migration `AddInboxMessages`).
 
 ---
 
@@ -280,7 +315,7 @@ dotnet test src/Nurtricenter.Api/Nurtricenter.Api.slnx
 ```
 
 Restoring needs the private feed token (`NUGET_USERNAME` / `NUGET_TOKEN`, see §4.1). The suite
-(273 tests) includes connectivity-specific guards on top of the domain/use-case tests:
+(289 tests) includes connectivity-specific guards on top of the domain/use-case tests:
 
 | Test | What it guards |
 |---|---|
@@ -294,6 +329,8 @@ Restoring needs the private feed token (`NUGET_USERNAME` / `NUGET_TOKEN`, see §
 | `WorkerService/*` | `RabbitMqSettings` required, publisher registration, publish handlers only exist in the worker host, queue bound to exactly the 10 registry exchanges |
 | `WorkerService/OutboxProcessorDispatchTests` | runs the **real** Joseco `OutboxProcessor` with the real DI wiring: a staged row is published to its exchange and marked processed (guards the `OutboxMessage<{concrete event}>` dispatch contract) |
 | `Integration/ServiceDiscoveryGatingTests` | the test host reads discovery as **disabled** |
+| `Infrastructure/Messaging/IdempotentConsumerTests` | real `UnitOfWork` + InMemory `AppDbContext`: the inbox row and the handler's changes land in one commit, a redelivery is skipped, a failed handler persists nothing so the redelivery is processed |
+| `Infrastructure/Messaging/PackageValidatedConsumerTests` + `Deliveries/Application/AddValidatedPackage*Tests` | contract → command mapping, tracking-number fallback, branch-coordinates fallback, no route for today → NotFound without commit |
 
 **Hermetic integration tests:** `IntegrationTestWebAppFactory` boots the real host, which loads
 the git-ignored `appsettings.Development.json` — the file that points at a *real* Consul. The
@@ -430,10 +467,11 @@ Expected: the same `201`. The gateway discovered `nurtricenter` in Consul and re
 | `HttpsRedirection__Enabled` | API | `false` | `true` only when this process is the TLS edge (local https profile) |
 | `RabbitMqSettings__Host` | Worker | — | Broker host; **must be reachable on 5672** |
 | `RabbitMqSettings__UserName` / `__Password` / `__VirtualHost` | Worker | — | Broker credentials (guest/guest/`/` locally) |
-| `RabbitMqSettings__MaxRetryAttempts` / `__RetryBaseDelayMilliseconds` | Worker | 3 / 500 | Consumer-side retry policy (used by services that consume; this service only produces) |
+| `RabbitMqSettings__MaxRetryAttempts` / `__RetryBaseDelayMilliseconds` | Worker | 3 / 500 | Consumer-side retry policy for `ms5.package-validated` |
+| `branchCoordinates__latitude` / `__longitude` | API + Worker | — | Route starting point; the worker also uses it when a `PackageValidated` has no coordinates |
 | `ConnectionStrings__DefaultConnection` | API + Worker | — | PostgreSQL connection string (ms5's Neon database) |
 | `NUGET_USERNAME` / `NUGET_TOKEN` | build / restore | — | GitHub user + classic token (`read:packages`) for the private Nur-tricenter feed |
-| `NURTRICENTER_REPO_DIR` | platform compose + `start-stack` | `nurtricenter-logistics-and-delivery` | Name of the ms5 folder next to `nur-tricenter-local` |
+| `NURTRICENTER_REPO_DIR` | platform compose + `start-stack` | `ms5-logistics-and-delivery` | Name of the ms5 folder next to `nur-tricenter-local` (only needed if it isn't the default) |
 
 Tracked `appsettings.json` files deliberately contain **no** connection strings, broker
 credentials or `ServiceRegistration` section. Those live in gitignored places:

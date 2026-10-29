@@ -4,7 +4,7 @@ This document outlines the testing strategy, architecture, and key decisions for
 
 ## 1. Overview
 
-The test suite consists of **273 tests** (268 Unit Tests, 5 Integration Tests) and is built using:
+The test suite consists of **289 tests** (284 Unit Tests, 5 Integration Tests) and is built using:
 - **xUnit**: The core testing framework.
 - **FluentAssertions**: For highly readable, fluent-style assertions.
 - **Moq**: For mocking dependencies like Repositories and external HTTP services.

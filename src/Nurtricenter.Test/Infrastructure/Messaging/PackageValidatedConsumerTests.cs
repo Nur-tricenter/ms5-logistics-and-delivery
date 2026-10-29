@@ -1,0 +1,79 @@
+namespace Nurtricenter.Test.Infrastructure.Messaging;
+
+using FluentAssertions;
+using MediatR;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
+using Nur.Tricenter.Integration.Messages.Contracting;
+using Nurtricenter.Application.Commands.Deliveries.Add;
+using Nurtricenter.Application.Commands.Deliveries.AddValidatedPackage;
+using Nurtricenter.Infrastructure.Messaging;
+
+public class PackageValidatedConsumerTests
+{
+    private readonly Mock<IMediator> _mediatorMock = new();
+    private readonly PackageValidatedConsumer _consumer;
+    private AddValidatedPackageCommand? _sent;
+
+    public PackageValidatedConsumerTests()
+    {
+        _mediatorMock
+            .Setup(m => m.Send(It.IsAny<AddValidatedPackageCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest<AddDeliveriesResponse>, CancellationToken>((command, _) => _sent = (AddValidatedPackageCommand)command)
+            .ReturnsAsync(new AddDeliveriesResponse(Guid.NewGuid(), []));
+
+        _consumer = new PackageValidatedConsumer(_mediatorMock.Object, NullLogger<PackageValidatedConsumer>.Instance);
+    }
+
+    private static PackageValidated MakeMessage(string trackingNumber = "NTR-A79C734C-20261024") => new("corr-1", "contracting")
+    {
+        PackageId = Guid.NewGuid(),
+        PatientId = Guid.NewGuid(),
+        ProductionOrderId = Guid.NewGuid(),
+        CatalogPlanId = Guid.NewGuid(),
+        ReleasedAt = DateTime.UtcNow,
+        DeliveryAddress = "Av. Banzer 123, Santa Cruz",
+        TrackingNumber = trackingNumber,
+        Latitude = -17.78,
+        Longitude = -63.18
+    };
+
+    [Fact]
+    public async Task HandleAsync_MapsTheContractToTheCommand()
+    {
+        var message = MakeMessage();
+
+        await _consumer.HandleAsync(message);
+
+        _sent.Should().Be(new AddValidatedPackageCommand(
+            message.PackageId.ToString(),
+            message.PatientId.ToString(),
+            message.DeliveryAddress,
+            message.Latitude,
+            message.Longitude,
+            message.TrackingNumber));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task HandleAsync_WithoutTrackingNumber_UsesThePackageIdAsLabel(string trackingNumber)
+    {
+        var message = MakeMessage(trackingNumber);
+
+        await _consumer.HandleAsync(message);
+
+        _sent!.LabelData.Should().Be(message.PackageId.ToString());
+    }
+
+    [Fact]
+    public async Task HandleAsync_WithNullCoordinates_PassesThemThroughForTheHandlerToResolve()
+    {
+        var message = MakeMessage() with { Latitude = null, Longitude = null };
+
+        await _consumer.HandleAsync(message);
+
+        _sent!.Latitude.Should().BeNull();
+        _sent.Longitude.Should().BeNull();
+    }
+}

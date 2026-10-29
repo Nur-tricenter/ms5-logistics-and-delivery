@@ -101,7 +101,7 @@ C:\Dev\dotnet projects\NUR\FinalProject\
 ├── nur-tricenter-identity\
 ├── ms2-plans-and-recipes-catalog\
 ├── ms4-delivery-schedule-management\
-└── modulo-2-actividad-3-DruGuerrero\    ← ms5 (on GitHub: nurtricenter-logistics-and-delivery)
+└── ms5-logistics-and-delivery\          ← ms5 (github.com/Nur-tricenter/ms5-logistics-and-delivery)
 ```
 
 Clone the platform repo, then let its script clone the rest:
@@ -119,26 +119,31 @@ compose `include:` can't find that repo's file.
 
 ### 3.3 Tell the platform where ms5 lives
 
-The platform looks for ms5 in a folder named `nurtricenter-logistics-and-delivery`, which is the
-GitHub repo name. If your ms5 folder has another name, set `NURTRICENTER_REPO_DIR` once,
-permanently:
+The platform looks for ms5 in a folder named **`ms5-logistics-and-delivery`**: the name of the
+official repo, [Nur-tricenter/ms5-logistics-and-delivery](https://github.com/Nur-tricenter/ms5-logistics-and-delivery),
+and the folder `setup-project` clones it into. If you work in that clone, **skip this step**.
+
+If your ms5 checkout has another folder name (e.g. an older clone of a personal fork), set
+`NURTRICENTER_REPO_DIR` once, permanently:
 
 ```powershell
-[Environment]::SetEnvironmentVariable("NURTRICENTER_REPO_DIR", "modulo-2-actividad-3-DruGuerrero", "User")
+[Environment]::SetEnvironmentVariable("NURTRICENTER_REPO_DIR", "<your-ms5-folder-name>", "User")
 ```
 
 Reopen your terminals afterwards. Without this, compose fails with
-`open ...\nurtricenter-logistics-and-delivery\nurtricenter.compose.yml: The system cannot find the file specified`.
+`open ...\ms5-logistics-and-delivery\nurtricenter.compose.yml: The system cannot find the file specified`.
 
-> If `setup-project` cloned a second copy of ms5 as `nurtricenter-logistics-and-delivery`, either
-> work in that copy (and skip this step), or delete it and keep `NURTRICENTER_REPO_DIR`.
+> Avoid keeping two ms5 checkouts. `setup-project` always clones `ms5-logistics-and-delivery`
+> if it's missing, so either work in that clone, or point `NURTRICENTER_REPO_DIR` at your
+> other folder and ignore or delete the extra one. Two folders don't update each other: each
+> needs its own `git pull`.
 
 ### 3.4 Give ms5 its database connection string
 
 In the **ms5 repo root**, copy `.env.example` to `.env` and put the Neon connection string in it:
 
 ```powershell
-cd "C:\Dev\dotnet projects\NUR\FinalProject\modulo-2-actividad-3-DruGuerrero"
+cd "C:\Dev\dotnet projects\NUR\FinalProject\ms5-logistics-and-delivery"
 Copy-Item .env.example .env
 notepad .env
 ```
@@ -157,7 +162,7 @@ The platform never migrates ms5's database. If ms5 has migrations that haven't b
 Neon yet, apply them by hand, from `src/Nurtricenter.Infrastructure`:
 
 ```powershell
-cd "C:\Dev\dotnet projects\NUR\FinalProject\modulo-2-actividad-3-DruGuerrero\src\Nurtricenter.Infrastructure"
+cd "C:\Dev\dotnet projects\NUR\FinalProject\ms5-logistics-and-delivery\src\Nurtricenter.Infrastructure"
 dotnet ef database update --startup-project ../Nurtricenter.Api
 ```
 
@@ -175,8 +180,8 @@ is gitignored. Running it when nothing is pending is a harmless no-op.
    powershell -ExecutionPolicy Bypass -File "C:\Dev\dotnet projects\NUR\FinalProject\nur-tricenter-local\scripts\start-stack.ps1"
    ```
 
-   (If you skipped §3.3's permanent variable, run
-   `$env:NURTRICENTER_REPO_DIR = 'modulo-2-actividad-3-DruGuerrero'` first, **in the same window**.)
+   (If your ms5 folder isn't `ms5-logistics-and-delivery` and you didn't set §3.3's permanent
+   variable, run `$env:NURTRICENTER_REPO_DIR = '<your-ms5-folder-name>'` first, **in the same window**.)
 
 3. Wait for `Stack ready.` The first run takes a few minutes. The script:
    1. removes old `nur-tricenter-*` containers (volumes and data are kept);
@@ -255,7 +260,7 @@ Invoke-RestMethod http://localhost:15005/api/catalog/v1/foods -Headers @{ Author
 **After changing ms5 code**, rebuild, then restart its container:
 
 ```powershell
-cd "C:\Dev\dotnet projects\NUR\FinalProject\modulo-2-actividad-3-DruGuerrero"
+cd "C:\Dev\dotnet projects\NUR\FinalProject\ms5-logistics-and-delivery"
 dotnet build src/Nurtricenter.Api/Nurtricenter.Api.csproj
 dotnet build src/Nurtricenter.WorkerService/Nurtricenter.WorkerService.csproj
 docker restart nur-tricenter-nurtricenter-api nur-tricenter-nurtricenter-workerservice
@@ -344,7 +349,7 @@ without Consul or the gateway. The image build needs the feed token as BuildKit 
 never end up in the image:
 
 ```powershell
-cd "C:\Dev\dotnet projects\NUR\FinalProject\modulo-2-actividad-3-DruGuerrero"
+cd "C:\Dev\dotnet projects\NUR\FinalProject\ms5-logistics-and-delivery"
 docker build --secret id=nuget_username,env=NUGET_USERNAME --secret id=nuget_token,env=NUGET_TOKEN -t aguerreroc/nurtricenter-ms5:0.2.0 .
 docker compose up
 ```

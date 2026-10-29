@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <!-- Restored from the Nur-tricenter feed (see NuGet.config at the repository root). -->
-    <PackageReference Include="Nur.Tricenter.Integration" Version="1.1.0" />
+    <PackageReference Include="Nur.Tricenter.Integration" Version="1.2.0" />
   </ItemGroup>
 
 </Project>

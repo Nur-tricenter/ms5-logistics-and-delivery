@@ -10,7 +10,9 @@ using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Nur.Tricenter.Integration.Messages.Contracting;
 using Nurtricenter.Application;
+using Nurtricenter.Infrastructure.Messaging;
 using Nurtricenter.WorkerService;
 
 public class RabbitMqRegistrationTests
@@ -49,6 +51,22 @@ public class RabbitMqRegistrationTests
 
         provider.GetRequiredService<RabbitMqSettings>().Host.Should().Be("localhost");
         provider.GetRequiredService<IExternalPublisher>().Should().NotBeNull();
+    }
+
+    [Fact]
+    public void AddNurtricenterConsumers_RegistersThePackageValidatedPipeline()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddNurtricenterRabbitMq(BuildConfiguration());
+
+        services.AddNurtricenterConsumers();
+
+        services.Should().Contain(d => d.ServiceType == typeof(PackageValidatedConsumer));
+        services.Should().Contain(d => d.ServiceType == typeof(IdempotentConsumer<PackageValidated, PackageValidatedConsumer>));
+        services.Should().Contain(d =>
+            d.ServiceType == typeof(TracingConsumer<PackageValidated, IdempotentConsumer<PackageValidated, PackageValidatedConsumer>>));
+        RabbitMqExtensions.PackageValidatedQueue.Should().Be("ms5.package-validated");
     }
 
     [Fact]

@@ -19,7 +19,7 @@ ms5 se ejecuta normalmente dentro del stack de la plataforma (`nur-tricenter-loc
 1. Configura el token de GitHub (`read:packages`) para el feed privado de los shared kernels:
    `NUGET_USERNAME` / `NUGET_TOKEN` como variables de entorno de usuario.
 2. Clona los repos hermanos con `nur-tricenter-local\scripts\setup-project.ps1`.
-3. Si esta carpeta no se llama `nurtricenter-logistics-and-delivery`, define `NURTRICENTER_REPO_DIR` con su nombre.
+3. `setup-project` clona este repo (oficial: [Nur-tricenter/ms5-logistics-and-delivery](https://github.com/Nur-tricenter/ms5-logistics-and-delivery)) como `ms5-logistics-and-delivery`. Si trabajas en una carpeta con otro nombre, define `NURTRICENTER_REPO_DIR` con ese nombre.
 4. Copia `.env.example` a `.env` y coloca la cadena de conexión de Neon (`.env` no se versiona).
 5. Ejecuta `powershell -ExecutionPolicy Bypass -File ..\nur-tricenter-local\scripts\start-stack.ps1`.
 6. Prueba: `POST http://localhost:15005/api/nurtricenter/v1/couriers` con `{"fullName":"Jane Doe"}`.
@@ -114,8 +114,13 @@ base cae, `/health` responde 503 y Consul deja de anunciar la instancia.
 
 Los eventos de dominio se publican a exchanges fanout de RabbitMQ (uno por evento, ver
 `contracts/NurtricenterExchanges.cs`); la cola `nurtricenter.default` acumula el historial
-completo y nunca se consume. Las colas por consumidor (p. ej. `ms4.route-completed`) las declara
-cada microservicio consumidor en `rabbitmq-definitions.json` de `nur-tricenter-local`.
+completo y nunca se consume. Las colas por consumidor las declara cada microservicio consumidor en
+`rabbitmq-definitions.json` de `nur-tricenter-local`.
+
+ms5 también **consume** un evento: `PackageValidated` de MS3, desde la cola `ms5.package-validated`.
+Cada paquete que aprueba el control de calidad de MS3 se agrega a la ruta de hoy, con un inbox
+idempotente (tabla `InboxMessages`). Corre en el worker y reemplaza al uso de
+`POST /api/v1/packages/deliveries`, que queda como entrada manual de respaldo.
 
 Los contratos de integración viven en el shared kernel (`Nur.Tricenter.Integration`, namespace
 `Nur.Tricenter.Integration.Messages.Logistics`), para que publicador y consumidores compilen
