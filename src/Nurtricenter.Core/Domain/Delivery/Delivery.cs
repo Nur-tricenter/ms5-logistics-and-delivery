@@ -77,7 +77,8 @@ public sealed class Delivery : Entity
         Confirmation = confirmation;
         Status = DeliveryStatus.Delivered;
 
-        AddDomainEvent(new DeliveryCompletedEvent(Id, RouteId, confirmation.DeliveredAt));
+        AddDomainEvent(new DeliveryCompletedEvent(
+            Id, RouteId, confirmation.DeliveredAt, confirmation.EvidencePhotoUrl, confirmation.DigitalSignature));
     }
 
     internal void RegisterFailedDelivery(string reason)
