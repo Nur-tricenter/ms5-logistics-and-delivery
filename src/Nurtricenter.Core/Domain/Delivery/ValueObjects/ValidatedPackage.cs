@@ -17,7 +17,12 @@ public sealed record ValidatedPackage
     /// </summary>
     public int? DeliveryDayId { get; }
 
-    public ValidatedPackage(string packageId, string patientId, string patientName, string labelData, int? deliveryDayId = null)
+    /// <summary>Patient's contact phone for the courier; null when the clinic has none or the package was loaded by hand.</summary>
+    public string? PatientPhone { get; }
+
+    public ValidatedPackage(
+        string packageId, string patientId, string patientName, string labelData, int? deliveryDayId = null,
+        string? patientPhone = null)
     {
         if (string.IsNullOrWhiteSpace(packageId))
             throw new DomainException(
@@ -52,6 +57,7 @@ public sealed record ValidatedPackage
         PatientName = patientName;
         LabelData = labelData;
         DeliveryDayId = deliveryDayId;
+        PatientPhone = string.IsNullOrWhiteSpace(patientPhone) ? null : patientPhone.Trim();
     }
 
     private ValidatedPackage() { }

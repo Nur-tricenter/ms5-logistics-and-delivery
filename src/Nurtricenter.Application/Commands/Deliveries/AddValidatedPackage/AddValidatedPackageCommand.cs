@@ -16,4 +16,5 @@ public sealed record AddValidatedPackageCommand(
     double? Latitude,
     double? Longitude,
     string LabelData,
-    int? DeliveryDayId = null) : IRequest<AddDeliveriesResponse>;
+    int? DeliveryDayId = null,
+    string? PatientPhone = null) : IRequest<AddDeliveriesResponse>;

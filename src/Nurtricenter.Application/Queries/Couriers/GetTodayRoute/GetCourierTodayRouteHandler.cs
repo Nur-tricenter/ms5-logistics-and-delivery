@@ -53,7 +53,8 @@ public sealed class GetCourierTodayRouteHandler : IRequestHandler<GetCourierToda
                 d.SequenceOrder ?? index + 1,
                 string.IsNullOrWhiteSpace(d.Package.PatientName) ? d.Package.PatientId : d.Package.PatientName,
                 d.Address.Description,
-                d.Status.ToString()))
+                d.Status.ToString(),
+                d.Package.PatientPhone))
             .ToList();
 
         return new CourierTodayRouteResponse(request.CourierId, route.Id, deliveryDtos);

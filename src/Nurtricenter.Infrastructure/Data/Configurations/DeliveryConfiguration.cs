@@ -60,6 +60,10 @@ public sealed class DeliveryConfiguration : IEntityTypeConfiguration<Delivery>
 
             package.Property(p => p.DeliveryDayId)
                 .HasColumnName("DeliveryDayId");
+
+            package.Property(p => p.PatientPhone)
+                .HasMaxLength(50)
+                .HasColumnName("PatientPhone");
         });
 
         // ── Value Object: DeliveryAddress ───────────────────────────

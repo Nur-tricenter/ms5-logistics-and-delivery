@@ -38,7 +38,8 @@ public class PackageValidatedConsumerTests
         TrackingNumber = trackingNumber,
         Latitude = -17.78,
         Longitude = -63.18,
-        DeliveryDayId = 7
+        DeliveryDayId = 7,
+        PatientPhone = "+591 700 11111"
     };
 
     [Fact]
@@ -57,7 +58,8 @@ public class PackageValidatedConsumerTests
             message.Latitude,
             message.Longitude,
             message.TrackingNumber,
-            message.DeliveryDayId));
+            message.DeliveryDayId,
+            message.PatientPhone));
     }
 
     [Fact]

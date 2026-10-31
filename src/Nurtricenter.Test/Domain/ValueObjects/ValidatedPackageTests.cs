@@ -1,4 +1,4 @@
-﻿namespace Nurtricenter.Test.Domain.ValueObjects;
+namespace Nurtricenter.Test.Domain.ValueObjects;
 
 using FluentAssertions;
 using Joseco.DDD.Core.Results;
@@ -18,6 +18,18 @@ public class ValidatedPackageTests
     {
         var package = new ValidatedPackage("PKG-123", "PAT-456", "Jane Doe", "LABEL-DATA");
         package.PatientId.Should().Be("PAT-456");
+    }
+
+    [Theory]
+    [InlineData("+591 700 11111", "+591 700 11111")]
+    [InlineData("  +591 700 11111  ", "+591 700 11111")]
+    [InlineData("", null)]
+    [InlineData("   ", null)]
+    [InlineData(null, null)]
+    public void Constructor_NormalisesThePatientPhone_AndTreatsBlankAsMissing(string? phone, string? expected)
+    {
+        var package = new ValidatedPackage("PKG-123", "PAT-456", "Jane Doe", "LABEL-DATA", patientPhone: phone);
+        package.PatientPhone.Should().Be(expected);
     }
 
     [Fact]
