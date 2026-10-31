@@ -78,6 +78,10 @@ Dependency flow: **Api → Application → Core**, **Api → Infrastructure → 
   Queues/bindings are owned by `nur-tricenter-local` topology, never declared here.
   `POST /api/v1/packages/deliveries` stays as a manual fallback (today's route, patient name in the body).
   MS5 calls no other service at request time: there is no ClinicService anymore.
+- **Read lookups (gap X-17)**: `GET /api/v1/routes/{routeId}` (any date, with deliveries) and
+  `GET /api/v1/deliveries?packageId=&deliveryDayId=` (at least one filter, else 400; empty list when
+  nothing matches) follow an MS3 package or MS4 day to its delivery and route. Both go through
+  `IRouteRepository` (read-only, `AsNoTracking`); DTOs in `Application/Queries/Routes/GetRouteById`.
 - **Domain events are explicit-ctor records with NO public parameterless ctor** (outbox Newtonsoft
   deserialization would otherwise build empty events). The serialization guard test enforces this.
 - Joseco's `OutboxProcessor` dispatches each row as `OutboxMessage<{concrete event type}>`, NOT
