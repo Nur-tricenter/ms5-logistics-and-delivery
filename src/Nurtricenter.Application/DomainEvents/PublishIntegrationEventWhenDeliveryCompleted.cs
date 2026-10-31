@@ -36,7 +36,9 @@ public sealed class PublishIntegrationEventWhenDeliveryCompleted : INotification
         {
             DeliveryId = deliveryCompleted.DeliveryId,
             RouteId = deliveryCompleted.RouteId,
-            DeliveredAt = deliveryCompleted.DeliveredAt
+            DeliveredAt = deliveryCompleted.DeliveredAt,
+            EvidencePhotoUrl = deliveryCompleted.EvidencePhotoUrl,
+            DigitalSignature = deliveryCompleted.DigitalSignature
         };
 
         _logger.LogInformation(

@@ -179,13 +179,17 @@ public class PublishIntegrationEventHandlersTests
         var handler = new PublishIntegrationEventWhenDeliveryCompleted(
             NullLogger<PublishIntegrationEventWhenDeliveryCompleted>.Instance, _publisher.Object);
 
-        await handler.Handle(WithCorrelation(new DeliveryCompletedEvent(deliveryId, routeId, deliveredAt)), CancellationToken.None);
+        await handler.Handle(
+            WithCorrelation(new DeliveryCompletedEvent(deliveryId, routeId, deliveredAt, "https://example.org/f.jpg", "firma")),
+            CancellationToken.None);
 
         _publisher.Verify(p => p.PublishAsync(
             It.Is<DeliveryCompleted>(c =>
                 c.DeliveryId == deliveryId
                 && c.RouteId == routeId
                 && c.DeliveredAt == deliveredAt
+                && c.EvidencePhotoUrl == "https://example.org/f.jpg"
+                && c.DigitalSignature == "firma"
                 && c.EventType == "Delivery.Completed"),
             NurtricenterExchanges.DeliveryCompleted,
             true), Times.Once);

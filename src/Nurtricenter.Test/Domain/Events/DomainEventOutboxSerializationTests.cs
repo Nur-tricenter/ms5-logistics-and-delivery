@@ -37,7 +37,7 @@ public class DomainEventOutboxSerializationTests
             new RouteStartedEvent(routeId),
             new RouteCompletedEvent(routeId),
             new RouteCancelledEvent(routeId),
-            new DeliveryCompletedEvent(deliveryId, routeId, new DateTime(2026, 10, 21, 10, 30, 0, DateTimeKind.Utc)),
+            new DeliveryCompletedEvent(deliveryId, routeId, new DateTime(2026, 10, 21, 10, 30, 0, DateTimeKind.Utc), "https://example.org/f.jpg", "firma"),
             new DeliveryFailedEvent(deliveryId, routeId, "recipient absent")
         };
     }
