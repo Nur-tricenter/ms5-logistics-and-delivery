@@ -99,7 +99,10 @@ Dependency flow: **Api → Application → Core**, **Api → Infrastructure → 
   which is the official repo (Nur-tricenter/ms5-logistics-and-delivery); feature branches go to
   `dev` via PR, then `dev` into `main`.
   The standalone `docker-compose.yml` runs ms5 on its own. Running instructions: `docs/running-locally.md`.
-- ms5 uses its own Neon database, never the platform Postgres. Its endpoints are anonymous;
+- ms5 uses its own Neon database by default; `.env.local-postgres.example` is the offline option that
+  points at the platform Postgres (`ms5_logistics`). Either way the `nurtricenter-migrate` job in
+  `nurtricenter.compose.yml` (`dotnet Nurtricenter.Api.dll --migrate`) applies the migrations before the
+  API and worker start. Its endpoints are anonymous;
   catalog/identity/ms4 require a JWT from identity (`admin`/`admin` locally).
 - On Windows here, `pwsh` is not installed: run platform scripts with
   `powershell -ExecutionPolicy Bypass -File <script>`.
