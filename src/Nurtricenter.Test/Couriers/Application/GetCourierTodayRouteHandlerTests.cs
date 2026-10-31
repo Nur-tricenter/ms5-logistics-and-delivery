@@ -1,4 +1,4 @@
-﻿namespace Nurtricenter.Test.Couriers.Application;
+namespace Nurtricenter.Test.Couriers.Application;
 
 using FluentAssertions;
 using Joseco.DDD.Core.Results;
@@ -116,6 +116,34 @@ public class GetCourierTodayRouteHandlerTests
 
         // Assert
         result.Deliveries[0].PatientName.Should().Be(expectedName);
+    }
+
+    [Fact]
+    public async Task Handle_WithDelivery_ReturnsThePatientPhoneForTheCourier()
+    {
+        var courierId = Guid.NewGuid();
+        var courier = new Courier(courierId, "Courier One");
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var route = new Route(Guid.NewGuid(), courierId, today);
+
+        route.AddDelivery(
+            new ValidatedPackage("PKG-001", "PAT-001", "John Doe", "label-data", patientPhone: "+591 700 11111"),
+            new DeliveryAddress("123 Main St", new Coordinate(1.0, 2.0)));
+        route.AddDelivery(
+            new ValidatedPackage("PKG-002", "PAT-002", "Jane Roe", "label-data"),
+            new DeliveryAddress("456 Side St", new Coordinate(1.0, 2.0)));
+
+        _courierRepositoryMock
+            .Setup(r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(courier);
+        _routeRepositoryMock
+            .Setup(r => r.GetByCourierAndDateAsync(courierId, today, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(route);
+
+        var result = await _handler.Handle(new GetCourierTodayRouteQuery(courierId), CancellationToken.None);
+
+        result.Deliveries[0].PatientPhone.Should().Be("+591 700 11111");
+        result.Deliveries[1].PatientPhone.Should().BeNull();
     }
 
     [Fact]

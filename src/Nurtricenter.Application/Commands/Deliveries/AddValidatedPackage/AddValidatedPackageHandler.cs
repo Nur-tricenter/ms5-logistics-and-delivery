@@ -47,7 +47,8 @@ public sealed class AddValidatedPackageHandler : IRequestHandler<AddValidatedPac
         var coordinate = ResolveCoordinate(request);
         var address = new DeliveryAddress(request.Address, coordinate);
         var package = new ValidatedPackage(
-            request.PackageId, request.PatientId, request.PatientName, request.LabelData, request.DeliveryDayId);
+            request.PackageId, request.PatientId, request.PatientName, request.LabelData, request.DeliveryDayId,
+            request.PatientPhone);
 
         route.AddDelivery(package, address);
 

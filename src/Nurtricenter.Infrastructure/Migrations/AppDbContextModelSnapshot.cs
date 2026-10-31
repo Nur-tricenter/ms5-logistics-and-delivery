@@ -283,6 +283,11 @@ namespace Nurtricenter.Infrastructure.Migrations
                                 .HasColumnType("character varying(200)")
                                 .HasColumnName("PatientName");
 
+                            b1.Property<string>("PatientPhone")
+                                .HasMaxLength(50)
+                                .HasColumnType("character varying(50)")
+                                .HasColumnName("PatientPhone");
+
                             b1.HasKey("DeliveryId");
 
                             b1.ToTable("Deliveries");

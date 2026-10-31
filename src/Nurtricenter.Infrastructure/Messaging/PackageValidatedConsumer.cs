@@ -59,7 +59,8 @@ public sealed class PackageValidatedConsumer(
             message.Latitude,
             message.Longitude,
             labelData,
-            message.DeliveryDayId);
+            message.DeliveryDayId,
+            message.PatientPhone);
 
         var response = await mediator.Send(command, cancellationToken);
 

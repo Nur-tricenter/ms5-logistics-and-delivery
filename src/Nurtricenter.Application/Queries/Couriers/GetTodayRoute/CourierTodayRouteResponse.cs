@@ -10,4 +10,5 @@ public sealed record TodayDeliveryDto(
     int SequenceOrder,
     string PatientName,
     string Address,
-    string Status);
+    string Status,
+    string? PatientPhone = null);
