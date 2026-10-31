@@ -15,14 +15,38 @@
 #
 #    ConnectionStrings__DefaultConnection=Host=...neon.tech;Database=...;Username=...;Password=...;SSL Mode=Require
 #
-#  Without that file both containers start and fail on their first query. The schema
-#  already lives in Neon; migrations are applied there by hand, as always.
+#  Without that file the containers start and fail on their first query. For an offline run
+#  copy `.env.local-postgres.example` to `.env` instead: it targets the platform Postgres.
+#  Migrations are applied by the `nurtricenter-migrate` one-shot job below (`--migrate`),
+#  against whichever database `.env` points to.
 #
 #  ASPNETCORE_ENVIRONMENT is Production on purpose: bin/Debug carries the gitignored
 #  appsettings.Development.json (localhost Consul/RabbitMQ), which must not leak in.
 # =============================================================================
 
 services:
+  # One-shot job: applies EF Core migrations, then exits. The API and the worker wait for it to
+  # COMPLETE, so the schema is in place before the first request and before the outbox first polls.
+  # It reads the same `.env` as the API, so it migrates whichever database that file points to.
+  nurtricenter-migrate:
+    image: mcr.microsoft.com/dotnet/aspnet:10.0
+    container_name: nur-tricenter-nurtricenter-migrate
+    hostname: nurtricenter-migrate
+    working_dir: /app
+    command: ["dotnet", "Nurtricenter.Api.dll", "--migrate"]
+    volumes:
+      - ./src/Nurtricenter.Api/bin/Debug/net10.0:/app:ro
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    networks: [nur-tricenter-net]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
   nurtricenter-api:
     image: mcr.microsoft.com/dotnet/aspnet:10.0
     container_name: nur-tricenter-nurtricenter-api
@@ -51,6 +75,8 @@ services:
     depends_on:
       consul:
         condition: service_started
+      nurtricenter-migrate:
+        condition: service_completed_successfully
     healthcheck:
       # Shell TCP probe: the aspnet runtime image ships no curl.
       test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/127.0.0.1/8080' || exit 1"]
@@ -89,6 +115,8 @@ services:
       rabbitmq:
         # service_healthy: the outbox processor publishes on its first poll.
         condition: service_healthy
+      nurtricenter-migrate:
+        condition: service_completed_successfully
     # Not registered in Consul: the worker serves no HTTP. Its liveness is a container
     # concern — if the OutboxProcessor host dies, the outbox stops draining silently.
     healthcheck:
