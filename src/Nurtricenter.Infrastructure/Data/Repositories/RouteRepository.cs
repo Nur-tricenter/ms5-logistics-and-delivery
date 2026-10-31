@@ -41,6 +41,17 @@ public sealed class RouteRepository : IRouteRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(r => r.CourierId == courierId && r.ScheduledDate == date, cancellationToken);
 
+    public async Task<IReadOnlyList<Route>> GetByDeliveryPackageAsync(
+        string? packageId, int? deliveryDayId, CancellationToken cancellationToken = default)
+        => await _context.Routes
+            .Include(r => r.Deliveries)
+            .AsNoTracking()
+            .Where(r => r.Deliveries.Any(d =>
+                (packageId == null || d.Package.PackageId == packageId) &&
+                (deliveryDayId == null || d.Package.DeliveryDayId == deliveryDayId)))
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync(cancellationToken);
+
     public Task UpdateAsync(Route route, CancellationToken cancellationToken = default)
     {
         _context.Routes.Update(route);
