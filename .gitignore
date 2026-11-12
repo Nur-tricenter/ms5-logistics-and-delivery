@@ -4,6 +4,10 @@
 [Log]s/
 [Tt]estResults/
 
+## Node / git hooks (Husky + lint-staged)
+node_modules/
+.husky/_/
+
 ## IDE and Editor files
 
 # Visual Studio
@@ -15,13 +19,12 @@
 *.sln.docstates
 
 # Visual Studio Code
-.vscode/
+.vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
 !.vscode/code-workspace
-/CLAUDE.md
 
 # JetBrains Rider / IntelliJ
 .idea/

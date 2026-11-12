@@ -24,3 +24,9 @@ docs/
 README.md
 Dockerfile
 .dockerignore
+
+# Node tooling (git hooks / linting) — not part of the image
+node_modules/
+.husky/
+package.json
+package-lock.json

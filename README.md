@@ -9,6 +9,7 @@
 | [docs/running-locally.md](docs/running-locally.md) | **Guía paso a paso** para levantar ms5 junto con toda la plataforma (gateway, Consul, RabbitMQ, catálogo, identity, ms4) en tu máquina. **Empieza aquí.** |
 | [docs/connectivity-and-messaging.md](docs/connectivity-and-messaging.md) | Cómo funciona la integración: outbox transaccional, publicación a RabbitMQ, registro en Consul, ruteo del gateway, contratos en el shared kernel, troubleshooting. |
 | [docs/TESTING.md](docs/TESTING.md) | Suite de tests. |
+| [docs/linting-and-hooks.md](docs/linting-and-hooks.md) | SonarLint, `.editorconfig` (regla de tabs) y hooks de git con Husky + lint-staged. |
 | [docs/domain-model.md](docs/domain-model.md) | Modelo de dominio. |
 
 ## Ejecución en la plataforma (recomendado)
@@ -52,7 +53,6 @@ En PowerShell, ejecuta el contenedor pasando las variables de entorno requeridas
 ```powershell
 docker run --rm -p 8080:8080 `
     -e "ConnectionStrings__DefaultConnection=Host={HOST}; Database=neondb; Username=neondb_owner; Password={PASSWORD}; SSL Mode=VerifyFull; Channel Binding=Require;" `
-    -e "ClinicService__BaseUrl=https://763708cb-6809-4a65-be56-fe140385a461.mock.pstmn.io" `
     -e "branchCoordinates__latitude=-17.768853725548713" `
     -e "branchCoordinates__longitude=-63.18276022365929" `
     aguerreroc/nurtricenter-ms5:0.2.0
@@ -72,7 +72,6 @@ Variables de entorno:
 | Variable                                 | Propósito                                                                                           |
 | ---------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | `ConnectionStrings__DefaultConnection`   | Cadena de conexión a PostgreSQL (Neon) usada por la capa de persistencia.                           |
-| `ClinicService__BaseUrl`                 | URL base del servicio externo de clínicas con el que se integra la API.                             |
 | `branchCoordinates__latitude`            | Latitud de la sucursal usada como punto de partida de las entregas.                                 |
 | `branchCoordinates__longitude`           | Longitud de la sucursal usada como punto de partida de las entregas.                                |
 | `HttpsRedirection__Enabled`              | `false` detrás del gateway (TLS termina upstream); `true` solo si este proceso es el borde TLS.     |

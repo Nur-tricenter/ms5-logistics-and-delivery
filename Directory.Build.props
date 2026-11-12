@@ -1,0 +1,24 @@
+<Project>
+
+  <!--
+    Configuración común a todos los proyectos del repo (src/ y contracts/).
+
+    SonarAnalyzer.CSharp es el mismo motor de reglas que usa SonarLint: al
+    referenciarlo como analizador, los hallazgos aparecen en el editor (extensión
+    SonarLint de VS Code / plugin de Rider y Visual Studio) y también en
+    `dotnet build`, que es lo que ejecutan los hooks de git (.husky/pre-push).
+
+    EnforceCodeStyleInBuild hace que las reglas de estilo del .editorconfig
+    (IDExxxx, incluida IDE0055 = indentación) se evalúen durante el build.
+  -->
+  <PropertyGroup>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.36.0.15337">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

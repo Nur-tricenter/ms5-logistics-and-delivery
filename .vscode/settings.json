@@ -1,0 +1,9 @@
+{
+  "dotnet.defaultSolution": "src/Nurtricenter.Api/Nurtricenter.Api.slnx",
+  "[csharp]": {
+    "editor.insertSpaces": false,
+    "editor.tabSize": 4,
+    "editor.formatOnSave": true
+  },
+  "sonarlint.disableTelemetry": true
+}

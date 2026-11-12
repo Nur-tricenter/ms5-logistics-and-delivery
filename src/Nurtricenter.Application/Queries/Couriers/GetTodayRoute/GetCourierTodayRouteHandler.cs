@@ -4,67 +4,59 @@ using Joseco.DDD.Core.Results;
 using MediatR;
 using Nurtricenter.Core.Domain.Courier.Repositories;
 using Nurtricenter.Core.Domain.Route.Repositories;
-using Nurtricenter.Core.Interfaces.Services.ClinicService;
 
 public sealed class GetCourierTodayRouteHandler : IRequestHandler<GetCourierTodayRouteQuery, CourierTodayRouteResponse>
 {
-    private readonly ICourierRepository _courierRepository;
-    private readonly IRouteRepository _routeRepository;
-    private readonly IClinicService _clinicService;
+	private readonly ICourierRepository _courierRepository;
+	private readonly IRouteRepository _routeRepository;
 
-    public GetCourierTodayRouteHandler(
-        ICourierRepository courierRepository,
-        IRouteRepository routeRepository,
-        IClinicService clinicService)
-    {
-        _courierRepository = courierRepository;
-        _routeRepository = routeRepository;
-        _clinicService = clinicService;
-    }
+	public GetCourierTodayRouteHandler(
+		ICourierRepository courierRepository,
+		IRouteRepository routeRepository)
+	{
+		_courierRepository = courierRepository;
+		_routeRepository = routeRepository;
+	}
 
-    public async Task<CourierTodayRouteResponse> Handle(
-        GetCourierTodayRouteQuery request,
-        CancellationToken cancellationToken)
-    {
-        var courier = await _courierRepository.GetByIdAsync(request.CourierId, cancellationToken);
+	public async Task<CourierTodayRouteResponse> Handle(
+		GetCourierTodayRouteQuery request,
+		CancellationToken cancellationToken)
+	{
+		var courier = await _courierRepository.GetByIdAsync(request.CourierId, cancellationToken);
 
-        if (courier is null)
-        {
-            throw new DomainException(
-                Error.NotFound(
-                    "Courier.NotFound",
-                    "Courier '{courierId}' was not found.",
-                    request.CourierId.ToString()));
-        }
+		if (courier is null)
+		{
+			throw new DomainException(
+				Error.NotFound(
+					"Courier.NotFound",
+					"Courier '{courierId}' was not found.",
+					request.CourierId.ToString()));
+		}
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        var route = await _routeRepository.GetByCourierAndDateAsync(request.CourierId, today, cancellationToken);
+		var today = DateOnly.FromDateTime(DateTime.Today);
+		var route = await _routeRepository.GetByCourierAndDateAsync(request.CourierId, today, cancellationToken);
 
-        if (route is null)
-        {
-            throw new DomainException(
-                Error.NotFound(
-                    "Route.NoRouteForToday",
-                    "No route found for courier '{courierId}' on {date}.",
-                    request.CourierId.ToString(),
-                    today.ToString("yyyy-MM-dd")));
-        }
+		if (route is null)
+		{
+			throw new DomainException(
+				Error.NotFound(
+					"Route.NoRouteForToday",
+					"No route found for courier '{courierId}' on {date}.",
+					request.CourierId.ToString(),
+					today.ToString("yyyy-MM-dd")));
+		}
 
-        var deliveries = route.Deliveries;
-        var patientIds = deliveries.Select(d => d.Package.PatientId).Distinct().ToList();
+		// Deliveries stored before the patient name was captured have an empty one; show the id instead.
+		var deliveryDtos = route.Deliveries
+			.Select((d, index) => new TodayDeliveryDto(
+				d.Id,
+				d.SequenceOrder ?? index + 1,
+				string.IsNullOrWhiteSpace(d.Package.PatientName) ? d.Package.PatientId : d.Package.PatientName,
+				d.Address.Description,
+				d.Status.ToString(),
+				d.Package.PatientPhone))
+			.ToList();
 
-        var patients = await _clinicService.GetPatientsContactInfoAsync(patientIds, cancellationToken);
-        var patientNameMap = patients.ToDictionary(p => p.PatientId, p => p.FullName);
-
-        var deliveryDtos = deliveries
-            .Select((d, index) => new TodayDeliveryDto(
-                d.Id,
-                d.SequenceOrder ?? index + 1,
-                patientNameMap.TryGetValue(d.Package.PatientId, out var name) ? name : d.Package.PatientId,
-                d.Address.Description,
-                d.Status.ToString()))
-            .ToList();
-
-        return new CourierTodayRouteResponse(request.CourierId, route.Id, deliveryDtos);
-    }
+		return new CourierTodayRouteResponse(request.CourierId, route.Id, deliveryDtos);
+	}
 }

@@ -25,53 +25,52 @@ using Nurtricenter.Infrastructure.Data;
 /// </summary>
 public class OutboxProcessorDispatchTests
 {
-    [Fact]
-    public async Task Process_PublishesTheStagedEventAndMarksTheRowProcessed()
-    {
-        var dbName = "OutboxDispatch_" + Guid.NewGuid();
-        var publisher = new Mock<IExternalPublisher>();
+	[Fact]
+	public async Task Process_PublishesTheStagedEventAndMarksTheRowProcessed()
+	{
+		var dbName = "OutboxDispatch_" + Guid.NewGuid();
+		var publisher = new Mock<IExternalPublisher>();
 
-        var services = new ServiceCollection();
-        services.AddLogging();
-        services.AddApplication();
-        services.AddInfrastructure(new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["ClinicService:BaseUrl"] = "http://localhost"
-            })
-            .Build());
-        services.AddIntegrationMessaging();
+		var services = new ServiceCollection();
+		services.AddLogging();
+		services.AddApplication();
+		services.AddInfrastructure(new ConfigurationBuilder()
+			.AddInMemoryCollection(new Dictionary<string, string?>
+			{
+			})
+			.Build());
+		services.AddIntegrationMessaging();
 
-        // Swap the database for InMemory and the broker for a mock.
-        services.RemoveAll<DbContextOptions<AppDbContext>>();
-        services.AddSingleton(new DbContextOptionsBuilder<AppDbContext>().UseInMemoryDatabase(dbName).Options);
-        services.AddSingleton(publisher.Object);
+		// Swap the database for InMemory and the broker for a mock.
+		services.RemoveAll<DbContextOptions<AppDbContext>>();
+		services.AddSingleton(new DbContextOptionsBuilder<AppDbContext>().UseInMemoryDatabase(dbName).Options);
+		services.AddSingleton(publisher.Object);
 
-        await using var provider = services.BuildServiceProvider();
+		await using var provider = services.BuildServiceProvider();
 
-        // API side: create a courier through the real unit of work, staging the outbox row.
-        var courierId = Guid.NewGuid();
-        using (var scope = provider.CreateScope())
-        {
-            scope.ServiceProvider.GetRequiredService<AppDbContext>().Couriers.Add(new Courier(courierId, "Jane Doe"));
-            await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().CommitAsync();
-        }
+		// API side: create a courier through the real unit of work, staging the outbox row.
+		var courierId = Guid.NewGuid();
+		using (var scope = provider.CreateScope())
+		{
+			scope.ServiceProvider.GetRequiredService<AppDbContext>().Couriers.Add(new Courier(courierId, "Jane Doe"));
+			await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().CommitAsync();
+		}
 
-        // Worker side: one polling cycle of the library's processor.
-        using (var scope = provider.CreateScope())
-        {
-            await scope.ServiceProvider.GetRequiredService<OutboxProcessor<DomainEvent>>().Process(CancellationToken.None);
-        }
+		// Worker side: one polling cycle of the library's processor.
+		using (var scope = provider.CreateScope())
+		{
+			await scope.ServiceProvider.GetRequiredService<OutboxProcessor<DomainEvent>>().Process(CancellationToken.None);
+		}
 
-        publisher.Verify(p => p.PublishAsync(
-            It.Is<CourierCreated>(c => c.CourierId == courierId && c.FullName == "Jane Doe"),
-            NurtricenterExchanges.CourierCreated,
-            true), Times.Once);
+		publisher.Verify(p => p.PublishAsync(
+			It.Is<CourierCreated>(c => c.CourierId == courierId && c.FullName == "Jane Doe"),
+			NurtricenterExchanges.CourierCreated,
+			true), Times.Once);
 
-        using (var scope = provider.CreateScope())
-        {
-            var row = scope.ServiceProvider.GetRequiredService<AppDbContext>().OutboxMessages.Single();
-            row.Processed.Should().BeTrue();
-        }
-    }
+		using (var scope = provider.CreateScope())
+		{
+			var row = scope.ServiceProvider.GetRequiredService<AppDbContext>().OutboxMessages.Single();
+			row.Processed.Should().BeTrue();
+		}
+	}
 }

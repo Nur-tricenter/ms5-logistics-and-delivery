@@ -9,15 +9,15 @@ using Joseco.DDD.Core.Abstractions;
 /// </summary>
 public sealed record DeliveryFailedEvent : DomainEvent
 {
-    public Guid DeliveryId { get; }
-    public Guid RouteId { get; }
-    public string Reason { get; }
+	public Guid DeliveryId { get; }
+	public Guid RouteId { get; }
+	public string Reason { get; }
 
-    public DeliveryFailedEvent(Guid deliveryId, Guid routeId, string reason)
-    {
-        OccuredOn = DateTime.UtcNow;
-        DeliveryId = deliveryId;
-        RouteId = routeId;
-        Reason = reason;
-    }
+	public DeliveryFailedEvent(Guid deliveryId, Guid routeId, string reason)
+	{
+		OccuredOn = DateTime.UtcNow;
+		DeliveryId = deliveryId;
+		RouteId = routeId;
+		Reason = reason;
+	}
 }

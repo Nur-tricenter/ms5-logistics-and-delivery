@@ -14,33 +14,33 @@ using Nurtricenter.Core.Domain.Route.Events;
 /// </summary>
 public sealed class PublishIntegrationEventWhenRouteCompleted : INotificationHandler<OutboxMessage<RouteCompletedEvent>>
 {
-    public const string Destination = NurtricenterExchanges.RouteCompleted;
-    public const string Source = "nurtricenter";
+	public const string Destination = NurtricenterExchanges.RouteCompleted;
+	public const string Source = "nurtricenter";
 
-    private readonly ILogger<PublishIntegrationEventWhenRouteCompleted> _logger;
-    private readonly IExternalPublisher _publisher;
+	private readonly ILogger<PublishIntegrationEventWhenRouteCompleted> _logger;
+	private readonly IExternalPublisher _publisher;
 
-    public PublishIntegrationEventWhenRouteCompleted(
-        ILogger<PublishIntegrationEventWhenRouteCompleted> logger,
-        IExternalPublisher publisher)
-    {
-        _logger = logger;
-        _publisher = publisher;
-    }
+	public PublishIntegrationEventWhenRouteCompleted(
+		ILogger<PublishIntegrationEventWhenRouteCompleted> logger,
+		IExternalPublisher publisher)
+	{
+		_logger = logger;
+		_publisher = publisher;
+	}
 
-    public async Task Handle(OutboxMessage<RouteCompletedEvent> notification, CancellationToken cancellationToken = default)
-    {
-        var routeCompleted = notification.Content;
+	public async Task Handle(OutboxMessage<RouteCompletedEvent> notification, CancellationToken cancellationToken = default)
+	{
+		var routeCompleted = notification.Content;
 
-        var message = new RouteCompleted(OutboxCorrelation.Resolve(notification.CorrelationId), Source)
-        {
-            RouteId = routeCompleted.RouteId
-        };
+		var message = new RouteCompleted(OutboxCorrelation.Resolve(notification.CorrelationId), Source)
+		{
+			RouteId = routeCompleted.RouteId
+		};
 
-        _logger.LogInformation(
-            "Publishing {EventType} for route {RouteId}",
-            message.EventType, message.RouteId);
+		_logger.LogInformation(
+			"Publishing {EventType} for route {RouteId}",
+			message.EventType, message.RouteId);
 
-        await _publisher.PublishAsync(message, Destination, declareDestination: true);
-    }
+		await _publisher.PublishAsync(message, Destination, declareDestination: true);
+	}
 }

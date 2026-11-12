@@ -19,31 +19,31 @@ using Microsoft.EntityFrameworkCore;
 /// </remarks>
 public class EfCoreOutboxService<TEvent> : IOutboxService<TEvent>, IOutboxRepository<TEvent>
 {
-    private readonly IOutboxDatabase<TEvent> _outboxDatabase;
+	private readonly IOutboxDatabase<TEvent> _outboxDatabase;
 
-    public EfCoreOutboxService(IOutboxDatabase<TEvent> outboxDatabase)
-    {
-        _outboxDatabase = outboxDatabase;
-    }
+	public EfCoreOutboxService(IOutboxDatabase<TEvent> outboxDatabase)
+	{
+		_outboxDatabase = outboxDatabase;
+	}
 
-    public async Task AddAsync(OutboxMessage<TEvent> message)
-    {
-        await _outboxDatabase.GetOutboxMessages().AddAsync(message);
-    }
+	public async Task AddAsync(OutboxMessage<TEvent> message)
+	{
+		await _outboxDatabase.GetOutboxMessages().AddAsync(message);
+	}
 
-    public Task Update(OutboxMessage<TEvent> message)
-    {
-        _outboxDatabase.GetOutboxMessages().Update(message);
+	public Task Update(OutboxMessage<TEvent> message)
+	{
+		_outboxDatabase.GetOutboxMessages().Update(message);
 
-        return Task.CompletedTask;
-    }
+		return Task.CompletedTask;
+	}
 
-    public async Task<IEnumerable<OutboxMessage<TEvent>>> GetUnprocessedAsync(int pageSize)
-    {
-        return await _outboxDatabase.GetOutboxMessages()
-            .Where(message => !message.Processed)
-            .OrderBy(message => message.Created)
-            .Take(pageSize)
-            .ToListAsync();
-    }
+	public async Task<IEnumerable<OutboxMessage<TEvent>>> GetUnprocessedAsync(int pageSize)
+	{
+		return await _outboxDatabase.GetOutboxMessages()
+			.Where(message => !message.Processed)
+			.OrderBy(message => message.Created)
+			.Take(pageSize)
+			.ToListAsync();
+	}
 }
