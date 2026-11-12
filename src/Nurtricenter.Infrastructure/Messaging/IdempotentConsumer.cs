@@ -27,38 +27,38 @@ using Nurtricenter.Infrastructure.Data;
 /// </para>
 /// </remarks>
 public sealed class IdempotentConsumer<T, TInner>(
-    TInner inner,
-    AppDbContext context,
-    ILogger<IdempotentConsumer<T, TInner>> logger) : IIntegrationMessageConsumer<T>
-    where T : IntegrationMessage
-    where TInner : class, IIntegrationMessageConsumer<T>
+	TInner inner,
+	AppDbContext context,
+	ILogger<IdempotentConsumer<T, TInner>> logger) : IIntegrationMessageConsumer<T>
+	where T : IntegrationMessage
+	where TInner : class, IIntegrationMessageConsumer<T>
 {
-    public async Task HandleAsync(T message, CancellationToken cancellationToken = default)
-    {
-        if (await context.InboxMessages.AsNoTracking().AnyAsync(m => m.MessageId == message.Id, cancellationToken))
-        {
-            logger.LogInformation("Skipping {MessageType} {MessageId}: already in the inbox.", typeof(T).Name, message.Id);
-            return;
-        }
+	public async Task HandleAsync(T message, CancellationToken cancellationToken = default)
+	{
+		if (await context.InboxMessages.AsNoTracking().AnyAsync(m => m.MessageId == message.Id, cancellationToken))
+		{
+			logger.LogInformation("Skipping {MessageType} {MessageId}: already in the inbox.", typeof(T).Name, message.Id);
+			return;
+		}
 
-        context.InboxMessages.Add(new InboxMessage(
-            message.Id, typeof(T).Name, message.CorrelationId, message.CreatedAt, DateTimeOffset.UtcNow));
+		context.InboxMessages.Add(new InboxMessage(
+			message.Id, typeof(T).Name, message.CorrelationId, message.CreatedAt, DateTimeOffset.UtcNow));
 
-        try
-        {
-            await inner.HandleAsync(message, cancellationToken);
-            await context.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException)
-        {
-            context.ChangeTracker.Clear();
+		try
+		{
+			await inner.HandleAsync(message, cancellationToken);
+			await context.SaveChangesAsync(cancellationToken);
+		}
+		catch (DbUpdateException)
+		{
+			context.ChangeTracker.Clear();
 
-            if (!await context.InboxMessages.AsNoTracking().AnyAsync(m => m.MessageId == message.Id, cancellationToken))
-                throw;
+			if (!await context.InboxMessages.AsNoTracking().AnyAsync(m => m.MessageId == message.Id, cancellationToken))
+				throw;
 
-            // A concurrent delivery of the same message won the primary-key race.
-            logger.LogInformation("{MessageType} {MessageId} was claimed by a concurrent delivery; skipping.",
-                typeof(T).Name, message.Id);
-        }
-    }
+			// A concurrent delivery of the same message won the primary-key race.
+			logger.LogInformation("{MessageType} {MessageId} was claimed by a concurrent delivery; skipping.",
+				typeof(T).Name, message.Id);
+		}
+	}
 }

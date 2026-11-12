@@ -10,7 +10,7 @@ using Nurtricenter.Application.Queries.Routes.GetRouteById;
 public sealed record FindDeliveriesQuery(string? PackageId, int? DeliveryDayId) : IRequest<IReadOnlyList<DeliveryLookupDto>>;
 
 public sealed record DeliveryLookupDto(
-    RouteDeliveryDto Delivery,
-    Guid CourierId,
-    DateOnly ScheduledDate,
-    string RouteStatus);
+	RouteDeliveryDto Delivery,
+	Guid CourierId,
+	DateOnly ScheduledDate,
+	string RouteStatus);

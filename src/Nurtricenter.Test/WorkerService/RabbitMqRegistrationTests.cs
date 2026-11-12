@@ -17,78 +17,78 @@ using Nurtricenter.WorkerService;
 
 public class RabbitMqRegistrationTests
 {
-    private static IConfiguration BuildConfiguration() =>
-        new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["RabbitMqSettings:Host"] = "localhost",
-                ["RabbitMqSettings:UserName"] = "guest",
-                ["RabbitMqSettings:Password"] = "guest",
-                ["RabbitMqSettings:VirtualHost"] = "/"
-            })
-            .Build();
+	private static IConfiguration BuildConfiguration() =>
+		new ConfigurationBuilder()
+			.AddInMemoryCollection(new Dictionary<string, string?>
+			{
+				["RabbitMqSettings:Host"] = "localhost",
+				["RabbitMqSettings:UserName"] = "guest",
+				["RabbitMqSettings:Password"] = "guest",
+				["RabbitMqSettings:VirtualHost"] = "/"
+			})
+			.Build();
 
-    [Fact]
-    public void AddNurtricenterRabbitMq_WithoutSection_Throws()
-    {
-        var services = new ServiceCollection();
-        var configuration = new ConfigurationBuilder().Build();
+	[Fact]
+	public void AddNurtricenterRabbitMq_WithoutSection_Throws()
+	{
+		var services = new ServiceCollection();
+		var configuration = new ConfigurationBuilder().Build();
 
-        var act = () => services.AddNurtricenterRabbitMq(configuration);
+		var act = () => services.AddNurtricenterRabbitMq(configuration);
 
-        act.Should().Throw<InvalidOperationException>();
-    }
+		act.Should().Throw<InvalidOperationException>();
+	}
 
-    [Fact]
-    public void AddNurtricenterRabbitMq_WithSection_RegistersSettingsAndPublisher()
-    {
-        var services = new ServiceCollection();
-        services.AddLogging();
+	[Fact]
+	public void AddNurtricenterRabbitMq_WithSection_RegistersSettingsAndPublisher()
+	{
+		var services = new ServiceCollection();
+		services.AddLogging();
 
-        services.AddNurtricenterRabbitMq(BuildConfiguration());
+		services.AddNurtricenterRabbitMq(BuildConfiguration());
 
-        var provider = services.BuildServiceProvider();
+		var provider = services.BuildServiceProvider();
 
-        provider.GetRequiredService<RabbitMqSettings>().Host.Should().Be("localhost");
-        provider.GetRequiredService<IExternalPublisher>().Should().NotBeNull();
-    }
+		provider.GetRequiredService<RabbitMqSettings>().Host.Should().Be("localhost");
+		provider.GetRequiredService<IExternalPublisher>().Should().NotBeNull();
+	}
 
-    [Fact]
-    public void AddNurtricenterConsumers_RegistersThePackageValidatedPipeline()
-    {
-        var services = new ServiceCollection();
-        services.AddLogging();
-        services.AddNurtricenterRabbitMq(BuildConfiguration());
+	[Fact]
+	public void AddNurtricenterConsumers_RegistersThePackageValidatedPipeline()
+	{
+		var services = new ServiceCollection();
+		services.AddLogging();
+		services.AddNurtricenterRabbitMq(BuildConfiguration());
 
-        services.AddNurtricenterConsumers();
+		services.AddNurtricenterConsumers();
 
-        services.Should().Contain(d => d.ServiceType == typeof(PackageValidatedConsumer));
-        services.Should().Contain(d => d.ServiceType == typeof(IdempotentConsumer<PackageValidated, PackageValidatedConsumer>));
-        services.Should().Contain(d =>
-            d.ServiceType == typeof(TracingConsumer<PackageValidated, IdempotentConsumer<PackageValidated, PackageValidatedConsumer>>));
-        RabbitMqExtensions.PackageValidatedQueue.Should().Be("ms5.package-validated");
-    }
+		services.Should().Contain(d => d.ServiceType == typeof(PackageValidatedConsumer));
+		services.Should().Contain(d => d.ServiceType == typeof(IdempotentConsumer<PackageValidated, PackageValidatedConsumer>));
+		services.Should().Contain(d =>
+			d.ServiceType == typeof(TracingConsumer<PackageValidated, IdempotentConsumer<PackageValidated, PackageValidatedConsumer>>));
+		RabbitMqExtensions.PackageValidatedQueue.Should().Be("ms5.package-validated");
+	}
 
-    [Fact]
-    public void AddApplication_WithoutAddIntegrationMessaging_RegistersNoOutboxPublishHandlers()
-    {
-        var services = new ServiceCollection();
+	[Fact]
+	public void AddApplication_WithoutAddIntegrationMessaging_RegistersNoOutboxPublishHandlers()
+	{
+		var services = new ServiceCollection();
 
-        services.AddApplication();
+		services.AddApplication();
 
-        services.Should().NotContain(d => Nurtricenter.Application.DependencyInjection.IsOutboxPublishHandler(d.ServiceType));
-    }
+		services.Should().NotContain(d => Nurtricenter.Application.DependencyInjection.IsOutboxPublishHandler(d.ServiceType));
+	}
 
-    [Fact]
-    public void AddIntegrationMessaging_RegistersTheTenPublishHandlers()
-    {
-        var services = new ServiceCollection();
+	[Fact]
+	public void AddIntegrationMessaging_RegistersTheTenPublishHandlers()
+	{
+		var services = new ServiceCollection();
 
-        services.AddApplication();
-        services.AddIntegrationMessaging();
+		services.AddApplication();
+		services.AddIntegrationMessaging();
 
-        services
-            .Where(d => Nurtricenter.Application.DependencyInjection.IsOutboxPublishHandler(d.ServiceType))
-            .Should().HaveCount(10);
-    }
+		services
+			.Where(d => Nurtricenter.Application.DependencyInjection.IsOutboxPublishHandler(d.ServiceType))
+			.Should().HaveCount(10);
+	}
 }

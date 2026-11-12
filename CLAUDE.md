@@ -30,6 +30,18 @@ dotnet ef migrations add <Name> --startup-project ../Nurtricenter.Api
 dotnet ef database update --startup-project ../Nurtricenter.Api
 ```
 
+Formatting & linting (see `docs/linting-and-hooks.md`): C# uses **tabs**, enforced by
+`.editorconfig` + `dotnet format`; `SonarAnalyzer.CSharp` is referenced from the root
+`Directory.Build.props` and runs on every `dotnet build`. After cloning, `npm install` activates
+the Husky hooks (`pre-commit` formats staged C# with lint-staged, `pre-push` runs
+`dotnet format --verify-no-changes`, build and tests).
+
+```bash
+npm run format        # dotnet format whitespace
+npm run format:check  # fails if anything is not tab-indented
+npm run lint          # dotnet build with SonarAnalyzer
+```
+
 The outbox table (`outbox.outboxMessage`) and the inbox table (`InboxMessages`) are created by
 migrations — the API and the worker require `dotnet ef database update` before running against a
 real database.

@@ -12,15 +12,15 @@ using Nurtricenter.Core.Domain.Delivery.Events;
 /// </summary>
 public sealed class SaveInOutboxWhenDeliveryCompletedEvent : INotificationHandler<DeliveryCompletedEvent>
 {
-    private readonly IOutboxService<DomainEvent> _outboxService;
+	private readonly IOutboxService<DomainEvent> _outboxService;
 
-    public SaveInOutboxWhenDeliveryCompletedEvent(IOutboxService<DomainEvent> outboxService)
-    {
-        _outboxService = outboxService;
-    }
+	public SaveInOutboxWhenDeliveryCompletedEvent(IOutboxService<DomainEvent> outboxService)
+	{
+		_outboxService = outboxService;
+	}
 
-    public async Task Handle(DeliveryCompletedEvent notification, CancellationToken cancellationToken = default)
-    {
-        await _outboxService.AddAsync(new OutboxMessage<DomainEvent>(notification));
-    }
+	public async Task Handle(DeliveryCompletedEvent notification, CancellationToken cancellationToken = default)
+	{
+		await _outboxService.AddAsync(new OutboxMessage<DomainEvent>(notification));
+	}
 }

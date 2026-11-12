@@ -1,0 +1,5 @@
+# Los hooks de Husky los ejecuta `sh`: deben conservar finales de línea LF
+# incluso en checkouts Windows con core.autocrlf=true. Sin esto, git escribe
+# CRLF en el working tree y el hook falla con `command not found`.
+.husky/* text eol=lf
+*.sh text eol=lf

@@ -15,111 +15,111 @@ using Nurtricenter.Test.Helpers;
 
 public class AddValidatedPackageHandlerTests
 {
-    private const double BranchLatitude = -17.77;
-    private const double BranchLongitude = -63.18;
+	private const double BranchLatitude = -17.77;
+	private const double BranchLongitude = -63.18;
 
-    private readonly Mock<IRouteRepository> _routeRepositoryMock = new();
-    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
-    private readonly AddValidatedPackageHandler _handler;
+	private readonly Mock<IRouteRepository> _routeRepositoryMock = new();
+	private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
+	private readonly AddValidatedPackageHandler _handler;
 
-    public AddValidatedPackageHandlerTests()
-    {
-        var branch = Microsoft.Extensions.Options.Options.Create(new BranchCoordinatesOptions
-        {
-            Latitude = BranchLatitude,
-            Longitude = BranchLongitude
-        });
+	public AddValidatedPackageHandlerTests()
+	{
+		var branch = Microsoft.Extensions.Options.Options.Create(new BranchCoordinatesOptions
+		{
+			Latitude = BranchLatitude,
+			Longitude = BranchLongitude
+		});
 
-        _handler = new AddValidatedPackageHandler(
-            _routeRepositoryMock.Object,
-            _unitOfWorkMock.Object,
-            branch,
-            NullLogger<AddValidatedPackageHandler>.Instance);
-    }
+		_handler = new AddValidatedPackageHandler(
+			_routeRepositoryMock.Object,
+			_unitOfWorkMock.Object,
+			branch,
+			NullLogger<AddValidatedPackageHandler>.Instance);
+	}
 
-    private static readonly DateOnly DeliveryDate = new(2026, 10, 29);
+	private static readonly DateOnly DeliveryDate = new(2026, 10, 29);
 
-    private static AddValidatedPackageCommand MakeCommand(double? latitude = -17.80, double? longitude = -63.20)
-        => new("PKG-001", "PAT-001", "Juan Perez", DeliveryDate, "Av. Banzer 123", latitude, longitude, "NTR-001", DeliveryDayId: 7);
+	private static AddValidatedPackageCommand MakeCommand(double? latitude = -17.80, double? longitude = -63.20)
+		=> new("PKG-001", "PAT-001", "Juan Perez", DeliveryDate, "Av. Banzer 123", latitude, longitude, "NTR-001", DeliveryDayId: 7);
 
-    private Route ArrangeRouteForDeliveryDate()
-    {
-        var route = RouteTestBuilder.CreatePendingRoute();
-        _routeRepositoryMock
-            .Setup(r => r.GetLatestRouteForDateAsync(DeliveryDate, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(route);
-        return route;
-    }
+	private Route ArrangeRouteForDeliveryDate()
+	{
+		var route = RouteTestBuilder.CreatePendingRoute();
+		_routeRepositoryMock
+			.Setup(r => r.GetLatestRouteForDateAsync(DeliveryDate, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(route);
+		return route;
+	}
 
-    [Fact]
-    public async Task Handle_WithRouteForDeliveryDate_AddsOnePendingDeliveryAndCommitsOnce()
-    {
-        var route = ArrangeRouteForDeliveryDate();
+	[Fact]
+	public async Task Handle_WithRouteForDeliveryDate_AddsOnePendingDeliveryAndCommitsOnce()
+	{
+		var route = ArrangeRouteForDeliveryDate();
 
-        var result = await _handler.Handle(MakeCommand(), CancellationToken.None);
+		var result = await _handler.Handle(MakeCommand(), CancellationToken.None);
 
-        route.Deliveries.Should().ContainSingle();
-        var delivery = route.Deliveries[0];
-        delivery.Status.Should().Be(DeliveryStatus.Pending);
-        delivery.Package.PackageId.Should().Be("PKG-001");
-        delivery.Package.PatientId.Should().Be("PAT-001");
-        delivery.Package.PatientName.Should().Be("Juan Perez");
-        delivery.Package.LabelData.Should().Be("NTR-001");
-        delivery.Package.DeliveryDayId.Should().Be(7);
-        route.DomainEvents.OfType<DeliveryAddedToRouteEvent>()
-            .Should().ContainSingle(e => e.DeliveryId == delivery.Id && e.DeliveryDayId == 7);
-        delivery.Address.Description.Should().Be("Av. Banzer 123");
-        delivery.Address.PlanarCoordinate.Latitude.Should().Be(-17.80);
+		route.Deliveries.Should().ContainSingle();
+		var delivery = route.Deliveries[0];
+		delivery.Status.Should().Be(DeliveryStatus.Pending);
+		delivery.Package.PackageId.Should().Be("PKG-001");
+		delivery.Package.PatientId.Should().Be("PAT-001");
+		delivery.Package.PatientName.Should().Be("Juan Perez");
+		delivery.Package.LabelData.Should().Be("NTR-001");
+		delivery.Package.DeliveryDayId.Should().Be(7);
+		route.DomainEvents.OfType<DeliveryAddedToRouteEvent>()
+			.Should().ContainSingle(e => e.DeliveryId == delivery.Id && e.DeliveryDayId == 7);
+		delivery.Address.Description.Should().Be("Av. Banzer 123");
+		delivery.Address.PlanarCoordinate.Latitude.Should().Be(-17.80);
 
-        result.RouteId.Should().Be(route.Id);
-        result.Deliveries.Should().ContainSingle(d => d.DeliveryId == delivery.Id && d.Status == "pending");
+		result.RouteId.Should().Be(route.Id);
+		result.Deliveries.Should().ContainSingle(d => d.DeliveryId == delivery.Id && d.Status == "pending");
 
-        _unitOfWorkMock.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
+		_unitOfWorkMock.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+	}
 
-    [Theory]
-    [InlineData(null, null)]
-    [InlineData(-17.80, null)]
-    [InlineData(null, -63.20)]
-    public async Task Handle_WithoutCoordinates_FallsBackToTheBranch(double? latitude, double? longitude)
-    {
-        var route = ArrangeRouteForDeliveryDate();
+	[Theory]
+	[InlineData(null, null)]
+	[InlineData(-17.80, null)]
+	[InlineData(null, -63.20)]
+	public async Task Handle_WithoutCoordinates_FallsBackToTheBranch(double? latitude, double? longitude)
+	{
+		var route = ArrangeRouteForDeliveryDate();
 
-        await _handler.Handle(MakeCommand(latitude, longitude), CancellationToken.None);
+		await _handler.Handle(MakeCommand(latitude, longitude), CancellationToken.None);
 
-        var coordinate = route.Deliveries.Single().Address.PlanarCoordinate;
-        coordinate.Latitude.Should().Be(BranchLatitude);
-        coordinate.Longitude.Should().Be(BranchLongitude);
-    }
+		var coordinate = route.Deliveries.Single().Address.PlanarCoordinate;
+		coordinate.Latitude.Should().Be(BranchLatitude);
+		coordinate.Longitude.Should().Be(BranchLongitude);
+	}
 
-    [Fact]
-    public async Task Handle_WhenNoRouteForDeliveryDate_ThrowsNotFoundAndDoesNotCommit()
-    {
-        _routeRepositoryMock
-            .Setup(r => r.GetLatestRouteForDateAsync(It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Route?)null);
+	[Fact]
+	public async Task Handle_WhenNoRouteForDeliveryDate_ThrowsNotFoundAndDoesNotCommit()
+	{
+		_routeRepositoryMock
+			.Setup(r => r.GetLatestRouteForDateAsync(It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
+			.ReturnsAsync((Route?)null);
 
-        var act = () => _handler.Handle(MakeCommand(), CancellationToken.None);
+		var act = () => _handler.Handle(MakeCommand(), CancellationToken.None);
 
-        var exception = await act.Should().ThrowAsync<DomainException>();
-        exception.Which.Error.Code.Should().Be("Route.NoRouteForDate");
-        exception.Which.Error.Type.Should().Be(ErrorType.NotFound);
-        _unitOfWorkMock.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
-    }
+		var exception = await act.Should().ThrowAsync<DomainException>();
+		exception.Which.Error.Code.Should().Be("Route.NoRouteForDate");
+		exception.Which.Error.Type.Should().Be(ErrorType.NotFound);
+		_unitOfWorkMock.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
+	}
 
-    [Fact]
-    public async Task Handle_WhenRouteIsCompleted_ThrowsAndDoesNotCommit()
-    {
-        var route = RouteTestBuilder.CreateInProgressRoute();
-        route.CompleteDelivery(route.Deliveries[0].Id, RouteTestBuilder.MakeConfirmation());
-        route.CompleteRoute();
-        _routeRepositoryMock
-            .Setup(r => r.GetLatestRouteForDateAsync(It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(route);
+	[Fact]
+	public async Task Handle_WhenRouteIsCompleted_ThrowsAndDoesNotCommit()
+	{
+		var route = RouteTestBuilder.CreateInProgressRoute();
+		route.CompleteDelivery(route.Deliveries[0].Id, RouteTestBuilder.MakeConfirmation());
+		route.CompleteRoute();
+		_routeRepositoryMock
+			.Setup(r => r.GetLatestRouteForDateAsync(It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
+			.ReturnsAsync(route);
 
-        var act = () => _handler.Handle(MakeCommand(), CancellationToken.None);
+		var act = () => _handler.Handle(MakeCommand(), CancellationToken.None);
 
-        (await act.Should().ThrowAsync<DomainException>()).Which.Error.Code.Should().Be("Route.CannotAddDelivery");
-        _unitOfWorkMock.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
-    }
+		(await act.Should().ThrowAsync<DomainException>()).Which.Error.Code.Should().Be("Route.CannotAddDelivery");
+		_unitOfWorkMock.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
+	}
 }

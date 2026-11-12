@@ -16,60 +16,60 @@ using Nurtricenter.Core.Domain.Route.Events;
 /// </summary>
 public class DomainEventOutboxSerializationTests
 {
-    private static readonly JsonSerializerSettings Settings = new()
-    {
-        TypeNameHandling = TypeNameHandling.All
-    };
+	private static readonly JsonSerializerSettings Settings = new()
+	{
+		TypeNameHandling = TypeNameHandling.All
+	};
 
-    public static TheoryData<DomainEvent> Events()
-    {
-        var courierId = Guid.NewGuid();
-        var routeId = Guid.NewGuid();
-        var deliveryId = Guid.NewGuid();
+	public static TheoryData<DomainEvent> Events()
+	{
+		var courierId = Guid.NewGuid();
+		var routeId = Guid.NewGuid();
+		var deliveryId = Guid.NewGuid();
 
-        return new TheoryData<DomainEvent>
-        {
-            new CourierCreatedEvent(courierId, "Jane Doe", CourierStatus.Available),
-            new CourierStatusChangedEvent(courierId, CourierStatus.Available, CourierStatus.OnRoute),
-            new RouteCreatedEvent(routeId, courierId, new DateOnly(2026, 10, 21)),
-            new CourierAssignedToRouteEvent(routeId, courierId),
-            new DeliveryAddedToRouteEvent(routeId, deliveryId, "package-1", "patient-1", 42),
-            new RouteStartedEvent(routeId),
-            new RouteCompletedEvent(routeId),
-            new RouteCancelledEvent(routeId),
-            new DeliveryCompletedEvent(deliveryId, routeId, new DateTime(2026, 10, 21, 10, 30, 0, DateTimeKind.Utc), "https://example.org/f.jpg", "firma"),
-            new DeliveryFailedEvent(deliveryId, routeId, "recipient absent")
-        };
-    }
+		return new TheoryData<DomainEvent>
+		{
+			new CourierCreatedEvent(courierId, "Jane Doe", CourierStatus.Available),
+			new CourierStatusChangedEvent(courierId, CourierStatus.Available, CourierStatus.OnRoute),
+			new RouteCreatedEvent(routeId, courierId, new DateOnly(2026, 10, 21)),
+			new CourierAssignedToRouteEvent(routeId, courierId),
+			new DeliveryAddedToRouteEvent(routeId, deliveryId, "package-1", "patient-1", 42),
+			new RouteStartedEvent(routeId),
+			new RouteCompletedEvent(routeId),
+			new RouteCancelledEvent(routeId),
+			new DeliveryCompletedEvent(deliveryId, routeId, new DateTime(2026, 10, 21, 10, 30, 0, DateTimeKind.Utc), "https://example.org/f.jpg", "firma"),
+			new DeliveryFailedEvent(deliveryId, routeId, "recipient absent")
+		};
+	}
 
-    [Theory]
-    [MemberData(nameof(Events))]
-    public void Event_RoundTripsThroughTheOutboxSerializer_WithPayloadIntact(DomainEvent domainEvent)
-    {
-        var json = JsonConvert.SerializeObject(domainEvent, Settings);
+	[Theory]
+	[MemberData(nameof(Events))]
+	public void Event_RoundTripsThroughTheOutboxSerializer_WithPayloadIntact(DomainEvent domainEvent)
+	{
+		var json = JsonConvert.SerializeObject(domainEvent, Settings);
 
-        var deserialized = JsonConvert.DeserializeObject<DomainEvent>(json, Settings);
+		var deserialized = JsonConvert.DeserializeObject<DomainEvent>(json, Settings);
 
-        deserialized.Should().BeOfType(domainEvent.GetType());
-        deserialized.Should().BeEquivalentTo(domainEvent);
-    }
+		deserialized.Should().BeOfType(domainEvent.GetType());
+		deserialized.Should().BeEquivalentTo(domainEvent);
+	}
 
-    [Fact]
-    public void EveryDomainEvent_DoesNotExposeAPublicParameterlessConstructor()
-    {
-        var domainEventTypes = typeof(CourierCreatedEvent).Assembly.GetTypes()
-            .Where(t => !t.IsAbstract
-                        && typeof(DomainEvent).IsAssignableFrom(t)
-                        && (t.Namespace?.StartsWith("Nurtricenter.Core.Domain") ?? false))
-            .ToList();
+	[Fact]
+	public void EveryDomainEvent_DoesNotExposeAPublicParameterlessConstructor()
+	{
+		var domainEventTypes = typeof(CourierCreatedEvent).Assembly.GetTypes()
+			.Where(t => !t.IsAbstract
+						&& typeof(DomainEvent).IsAssignableFrom(t)
+						&& (t.Namespace?.StartsWith("Nurtricenter.Core.Domain") ?? false))
+			.ToList();
 
-        domainEventTypes.Should().NotBeEmpty();
+		domainEventTypes.Should().NotBeEmpty();
 
-        foreach (var type in domainEventTypes)
-        {
-            var parameterless = type.GetConstructor(Type.EmptyTypes);
-            parameterless.Should().BeNull(
-                $"domain event {type.Name} must not expose a parameterless constructor");
-        }
-    }
+		foreach (var type in domainEventTypes)
+		{
+			var parameterless = type.GetConstructor(Type.EmptyTypes);
+			parameterless.Should().BeNull(
+				$"domain event {type.Name} must not expose a parameterless constructor");
+		}
+	}
 }

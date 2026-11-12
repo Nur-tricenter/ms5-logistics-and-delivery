@@ -12,32 +12,32 @@ using Nurtricenter.Core.Domain.Courier.Events;
 /// </summary>
 public class OutboxChainCoverageTests
 {
-    [Fact]
-    public void EveryDomainEvent_HasSaveAndPublishHandlers()
-    {
-        var applicationAssembly = typeof(Nurtricenter.Application.DependencyInjection).Assembly;
+	[Fact]
+	public void EveryDomainEvent_HasSaveAndPublishHandlers()
+	{
+		var applicationAssembly = typeof(Nurtricenter.Application.DependencyInjection).Assembly;
 
-        var domainEventTypes = typeof(CourierCreatedEvent).Assembly.GetTypes()
-            .Where(t => !t.IsAbstract
-                        && typeof(DomainEvent).IsAssignableFrom(t)
-                        && (t.Namespace?.StartsWith("Nurtricenter.Core.Domain") ?? false))
-            .ToList();
+		var domainEventTypes = typeof(CourierCreatedEvent).Assembly.GetTypes()
+			.Where(t => !t.IsAbstract
+						&& typeof(DomainEvent).IsAssignableFrom(t)
+						&& (t.Namespace?.StartsWith("Nurtricenter.Core.Domain") ?? false))
+			.ToList();
 
-        domainEventTypes.Should().NotBeEmpty();
+		domainEventTypes.Should().NotBeEmpty();
 
-        foreach (var eventType in domainEventTypes)
-        {
-            applicationAssembly
-                .GetType($"Nurtricenter.Application.DomainEvents.SaveInOutboxWhen{eventType.Name}")
-                .Should().NotBeNull($"event {eventType.Name} needs a SaveInOutbox handler");
+		foreach (var eventType in domainEventTypes)
+		{
+			applicationAssembly
+				.GetType($"Nurtricenter.Application.DomainEvents.SaveInOutboxWhen{eventType.Name}")
+				.Should().NotBeNull($"event {eventType.Name} needs a SaveInOutbox handler");
 
-            var publishHandlerName = eventType.Name.EndsWith("Event", StringComparison.Ordinal)
-                ? eventType.Name[..^"Event".Length]
-                : eventType.Name;
+			var publishHandlerName = eventType.Name.EndsWith("Event", StringComparison.Ordinal)
+				? eventType.Name[..^"Event".Length]
+				: eventType.Name;
 
-            applicationAssembly
-                .GetType($"Nurtricenter.Application.DomainEvents.PublishIntegrationEventWhen{publishHandlerName}")
-                .Should().NotBeNull($"event {eventType.Name} needs a PublishIntegrationEvent handler");
-        }
-    }
+			applicationAssembly
+				.GetType($"Nurtricenter.Application.DomainEvents.PublishIntegrationEventWhen{publishHandlerName}")
+				.Should().NotBeNull($"event {eventType.Name} needs a PublishIntegrationEvent handler");
+		}
+	}
 }

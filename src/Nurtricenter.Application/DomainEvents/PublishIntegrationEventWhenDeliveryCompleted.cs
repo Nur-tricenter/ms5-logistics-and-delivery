@@ -14,37 +14,37 @@ using Nurtricenter.Core.Domain.Delivery.Events;
 /// </summary>
 public sealed class PublishIntegrationEventWhenDeliveryCompleted : INotificationHandler<OutboxMessage<DeliveryCompletedEvent>>
 {
-    public const string Destination = NurtricenterExchanges.DeliveryCompleted;
-    public const string Source = "nurtricenter";
+	public const string Destination = NurtricenterExchanges.DeliveryCompleted;
+	public const string Source = "nurtricenter";
 
-    private readonly ILogger<PublishIntegrationEventWhenDeliveryCompleted> _logger;
-    private readonly IExternalPublisher _publisher;
+	private readonly ILogger<PublishIntegrationEventWhenDeliveryCompleted> _logger;
+	private readonly IExternalPublisher _publisher;
 
-    public PublishIntegrationEventWhenDeliveryCompleted(
-        ILogger<PublishIntegrationEventWhenDeliveryCompleted> logger,
-        IExternalPublisher publisher)
-    {
-        _logger = logger;
-        _publisher = publisher;
-    }
+	public PublishIntegrationEventWhenDeliveryCompleted(
+		ILogger<PublishIntegrationEventWhenDeliveryCompleted> logger,
+		IExternalPublisher publisher)
+	{
+		_logger = logger;
+		_publisher = publisher;
+	}
 
-    public async Task Handle(OutboxMessage<DeliveryCompletedEvent> notification, CancellationToken cancellationToken = default)
-    {
-        var deliveryCompleted = notification.Content;
+	public async Task Handle(OutboxMessage<DeliveryCompletedEvent> notification, CancellationToken cancellationToken = default)
+	{
+		var deliveryCompleted = notification.Content;
 
-        var message = new DeliveryCompleted(OutboxCorrelation.Resolve(notification.CorrelationId), Source)
-        {
-            DeliveryId = deliveryCompleted.DeliveryId,
-            RouteId = deliveryCompleted.RouteId,
-            DeliveredAt = deliveryCompleted.DeliveredAt,
-            EvidencePhotoUrl = deliveryCompleted.EvidencePhotoUrl,
-            DigitalSignature = deliveryCompleted.DigitalSignature
-        };
+		var message = new DeliveryCompleted(OutboxCorrelation.Resolve(notification.CorrelationId), Source)
+		{
+			DeliveryId = deliveryCompleted.DeliveryId,
+			RouteId = deliveryCompleted.RouteId,
+			DeliveredAt = deliveryCompleted.DeliveredAt,
+			EvidencePhotoUrl = deliveryCompleted.EvidencePhotoUrl,
+			DigitalSignature = deliveryCompleted.DigitalSignature
+		};
 
-        _logger.LogInformation(
-            "Publishing {EventType} for delivery {DeliveryId} on route {RouteId}",
-            message.EventType, message.DeliveryId, message.RouteId);
+		_logger.LogInformation(
+			"Publishing {EventType} for delivery {DeliveryId} on route {RouteId}",
+			message.EventType, message.DeliveryId, message.RouteId);
 
-        await _publisher.PublishAsync(message, Destination, declareDestination: true);
-    }
+		await _publisher.PublishAsync(message, Destination, declareDestination: true);
+	}
 }

@@ -7,22 +7,22 @@ using Nurtricenter.Core.Domain.Courier.Repositories;
 
 public sealed class CreateCourierHandler : IRequestHandler<CreateCourierCommand, CourierResponse>
 {
-    private readonly ICourierRepository _courierRepository;
-    private readonly IUnitOfWork _unitOfWork;
+	private readonly ICourierRepository _courierRepository;
+	private readonly IUnitOfWork _unitOfWork;
 
-    public CreateCourierHandler(ICourierRepository courierRepository, IUnitOfWork unitOfWork)
-    {
-        _courierRepository = courierRepository;
-        _unitOfWork = unitOfWork;
-    }
+	public CreateCourierHandler(ICourierRepository courierRepository, IUnitOfWork unitOfWork)
+	{
+		_courierRepository = courierRepository;
+		_unitOfWork = unitOfWork;
+	}
 
-    public async Task<CourierResponse> Handle(CreateCourierCommand request, CancellationToken cancellationToken)
-    {
-        var courier = new Courier(Guid.NewGuid(), request.FullName);
+	public async Task<CourierResponse> Handle(CreateCourierCommand request, CancellationToken cancellationToken)
+	{
+		var courier = new Courier(Guid.NewGuid(), request.FullName);
 
-        await _courierRepository.AddAsync(courier, cancellationToken);
-        await _unitOfWork.CommitAsync(cancellationToken);
+		await _courierRepository.AddAsync(courier, cancellationToken);
+		await _unitOfWork.CommitAsync(cancellationToken);
 
-        return new CourierResponse(courier.Id, courier.FullName, courier.Status);
-    }
+		return new CourierResponse(courier.Id, courier.FullName, courier.Status);
+	}
 }

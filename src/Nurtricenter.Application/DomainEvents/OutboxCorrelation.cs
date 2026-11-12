@@ -15,6 +15,6 @@ using System.Diagnostics;
 /// </remarks>
 public static class OutboxCorrelation
 {
-    public static string? Resolve(string? correlationId) =>
-        correlationId ?? Activity.Current?.TraceId.ToString();
+	public static string? Resolve(string? correlationId) =>
+		correlationId ?? Activity.Current?.TraceId.ToString();
 }

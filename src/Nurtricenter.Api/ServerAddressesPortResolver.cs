@@ -20,47 +20,47 @@ using Nurtricenter.Infrastructure.ServiceDiscovery;
 /// </remarks>
 internal sealed class ServerAddressesPortResolver : IServerPortResolver
 {
-    private readonly IServer _server;
+	private readonly IServer _server;
 
-    public ServerAddressesPortResolver(IServer server)
-    {
-        _server = server;
-    }
+	public ServerAddressesPortResolver(IServer server)
+	{
+		_server = server;
+	}
 
-    public int? ResolveBoundPort()
-    {
-        var addresses = _server.Features.Get<IServerAddressesFeature>()?.Addresses;
-        if (addresses is null)
-        {
-            return null;
-        }
+	public int? ResolveBoundPort()
+	{
+		var addresses = _server.Features.Get<IServerAddressesFeature>()?.Addresses;
+		if (addresses is null)
+		{
+			return null;
+		}
 
-        int? httpsPort = null;
+		int? httpsPort = null;
 
-        foreach (var address in addresses)
-        {
-            if (!Uri.TryCreate(address, UriKind.Absolute, out var uri))
-            {
-                continue;
-            }
+		foreach (var address in addresses)
+		{
+			if (!Uri.TryCreate(address, UriKind.Absolute, out var uri))
+			{
+				continue;
+			}
 
-            // Port 0 means "pick one for me" and is still unresolved at this point in startup.
-            if (uri.Port <= 0)
-            {
-                continue;
-            }
+			// Port 0 means "pick one for me" and is still unresolved at this point in startup.
+			if (uri.Port <= 0)
+			{
+				continue;
+			}
 
-            if (uri.Scheme == Uri.UriSchemeHttp)
-            {
-                return uri.Port;
-            }
+			if (uri.Scheme == Uri.UriSchemeHttp)
+			{
+				return uri.Port;
+			}
 
-            if (uri.Scheme == Uri.UriSchemeHttps)
-            {
-                httpsPort ??= uri.Port;
-            }
-        }
+			if (uri.Scheme == Uri.UriSchemeHttps)
+			{
+				httpsPort ??= uri.Port;
+			}
+		}
 
-        return httpsPort;
-    }
+		return httpsPort;
+	}
 }

@@ -11,214 +11,214 @@ using Nurtricenter.Infrastructure.Data;
 
 namespace Nurtricenter.Infrastructure.Migrations
 {
-    [DbContext(typeof(AppDbContext))]
-    [Migration("20260711021217_AddSequenceOrderToDelivery")]
-    partial class AddSequenceOrderToDelivery
-    {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
-        {
+	[DbContext(typeof(AppDbContext))]
+	[Migration("20260711021217_AddSequenceOrderToDelivery")]
+	partial class AddSequenceOrderToDelivery
+	{
+		/// <inheritdoc />
+		protected override void BuildTargetModel(ModelBuilder modelBuilder)
+		{
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.9")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+			modelBuilder
+				.HasAnnotation("ProductVersion", "10.0.9")
+				.HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+			NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Nurtricenter.Core.Domain.Courier.Courier", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+			modelBuilder.Entity("Nurtricenter.Core.Domain.Courier.Courier", b =>
+				{
+					b.Property<Guid>("Id")
+						.ValueGeneratedOnAdd()
+						.HasColumnType("uuid");
 
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+					b.Property<string>("FullName")
+						.IsRequired()
+						.HasMaxLength(200)
+						.HasColumnType("character varying(200)");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+					b.Property<string>("Status")
+						.IsRequired()
+						.HasMaxLength(50)
+						.HasColumnType("character varying(50)");
 
-                    b.HasKey("Id");
+					b.HasKey("Id");
 
-                    b.ToTable("Couriers", (string)null);
-                });
+					b.ToTable("Couriers", (string)null);
+				});
 
-            modelBuilder.Entity("Nurtricenter.Core.Domain.Delivery.Delivery", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+			modelBuilder.Entity("Nurtricenter.Core.Domain.Delivery.Delivery", b =>
+				{
+					b.Property<Guid>("Id")
+						.HasColumnType("uuid");
 
-                    b.Property<Guid>("RouteId")
-                        .HasColumnType("uuid");
+					b.Property<Guid>("RouteId")
+						.HasColumnType("uuid");
 
-                    b.Property<int?>("SequenceOrder")
-                        .HasColumnType("integer");
+					b.Property<int?>("SequenceOrder")
+						.HasColumnType("integer");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+					b.Property<string>("Status")
+						.IsRequired()
+						.HasMaxLength(50)
+						.HasColumnType("character varying(50)");
 
-                    b.HasKey("Id");
+					b.HasKey("Id");
 
-                    b.HasIndex("RouteId");
+					b.HasIndex("RouteId");
 
-                    b.ToTable("Deliveries", (string)null);
-                });
+					b.ToTable("Deliveries", (string)null);
+				});
 
-            modelBuilder.Entity("Nurtricenter.Core.Domain.Route.Route", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+			modelBuilder.Entity("Nurtricenter.Core.Domain.Route.Route", b =>
+				{
+					b.Property<Guid>("Id")
+						.ValueGeneratedOnAdd()
+						.HasColumnType("uuid");
 
-                    b.Property<Guid>("CourierId")
-                        .HasColumnType("uuid");
+					b.Property<Guid>("CourierId")
+						.HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+					b.Property<DateTime>("CreatedAt")
+						.HasColumnType("timestamp with time zone");
 
-                    b.Property<DateOnly>("ScheduledDate")
-                        .HasColumnType("date");
+					b.Property<DateOnly>("ScheduledDate")
+						.HasColumnType("date");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+					b.Property<string>("Status")
+						.IsRequired()
+						.HasMaxLength(50)
+						.HasColumnType("character varying(50)");
 
-                    b.HasKey("Id");
+					b.HasKey("Id");
 
-                    b.ToTable("Routes", (string)null);
-                });
+					b.ToTable("Routes", (string)null);
+				});
 
-            modelBuilder.Entity("Nurtricenter.Core.Domain.Delivery.Delivery", b =>
-                {
-                    b.HasOne("Nurtricenter.Core.Domain.Route.Route", null)
-                        .WithMany("Deliveries")
-                        .HasForeignKey("RouteId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+			modelBuilder.Entity("Nurtricenter.Core.Domain.Delivery.Delivery", b =>
+				{
+					b.HasOne("Nurtricenter.Core.Domain.Route.Route", null)
+						.WithMany("Deliveries")
+						.HasForeignKey("RouteId")
+						.OnDelete(DeleteBehavior.Restrict)
+						.IsRequired();
 
-                    b.OwnsOne("Nurtricenter.Core.Domain.Delivery.ValueObjects.DeliveryAddress", "Address", b1 =>
-                        {
-                            b1.Property<Guid>("DeliveryId")
-                                .HasColumnType("uuid");
+					b.OwnsOne("Nurtricenter.Core.Domain.Delivery.ValueObjects.DeliveryAddress", "Address", b1 =>
+						{
+							b1.Property<Guid>("DeliveryId")
+								.HasColumnType("uuid");
 
-                            b1.Property<string>("Description")
-                                .IsRequired()
-                                .HasMaxLength(500)
-                                .HasColumnType("character varying(500)")
-                                .HasColumnName("AddressDescription");
+							b1.Property<string>("Description")
+								.IsRequired()
+								.HasMaxLength(500)
+								.HasColumnType("character varying(500)")
+								.HasColumnName("AddressDescription");
 
-                            b1.HasKey("DeliveryId");
+							b1.HasKey("DeliveryId");
 
-                            b1.ToTable("Deliveries");
+							b1.ToTable("Deliveries");
 
-                            b1.WithOwner()
-                                .HasForeignKey("DeliveryId");
+							b1.WithOwner()
+								.HasForeignKey("DeliveryId");
 
-                            b1.OwnsOne("Nurtricenter.Core.Domain.Delivery.ValueObjects.Coordinate", "PlanarCoordinate", b2 =>
-                                {
-                                    b2.Property<Guid>("DeliveryAddressDeliveryId")
-                                        .HasColumnType("uuid");
+							b1.OwnsOne("Nurtricenter.Core.Domain.Delivery.ValueObjects.Coordinate", "PlanarCoordinate", b2 =>
+								{
+									b2.Property<Guid>("DeliveryAddressDeliveryId")
+										.HasColumnType("uuid");
 
-                                    b2.Property<double>("Latitude")
-                                        .HasColumnType("double precision")
-                                        .HasColumnName("AddressCoordinateLatitude");
+									b2.Property<double>("Latitude")
+										.HasColumnType("double precision")
+										.HasColumnName("AddressCoordinateLatitude");
 
-                                    b2.Property<double>("Longitude")
-                                        .HasColumnType("double precision")
-                                        .HasColumnName("AddressCoordinateLongitude");
+									b2.Property<double>("Longitude")
+										.HasColumnType("double precision")
+										.HasColumnName("AddressCoordinateLongitude");
 
-                                    b2.HasKey("DeliveryAddressDeliveryId");
+									b2.HasKey("DeliveryAddressDeliveryId");
 
-                                    b2.ToTable("Deliveries");
+									b2.ToTable("Deliveries");
 
-                                    b2.WithOwner()
-                                        .HasForeignKey("DeliveryAddressDeliveryId");
-                                });
+									b2.WithOwner()
+										.HasForeignKey("DeliveryAddressDeliveryId");
+								});
 
-                            b1.Navigation("PlanarCoordinate")
-                                .IsRequired();
-                        });
+							b1.Navigation("PlanarCoordinate")
+								.IsRequired();
+						});
 
-                    b.OwnsOne("Nurtricenter.Core.Domain.Delivery.ValueObjects.DeliveryConfirmation", "Confirmation", b1 =>
-                        {
-                            b1.Property<Guid>("DeliveryId")
-                                .HasColumnType("uuid");
+					b.OwnsOne("Nurtricenter.Core.Domain.Delivery.ValueObjects.DeliveryConfirmation", "Confirmation", b1 =>
+						{
+							b1.Property<Guid>("DeliveryId")
+								.HasColumnType("uuid");
 
-                            b1.Property<DateTime>("DeliveredAt")
-                                .HasColumnType("timestamp with time zone")
-                                .HasColumnName("DeliveredAt");
+							b1.Property<DateTime>("DeliveredAt")
+								.HasColumnType("timestamp with time zone")
+								.HasColumnName("DeliveredAt");
 
-                            b1.Property<string>("DigitalSignature")
-                                .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
-                                .HasColumnName("DigitalSignature");
+							b1.Property<string>("DigitalSignature")
+								.IsRequired()
+								.HasMaxLength(200)
+								.HasColumnType("character varying(200)")
+								.HasColumnName("DigitalSignature");
 
-                            b1.Property<string>("EvidencePhotoUrl")
-                                .IsRequired()
-                                .HasMaxLength(500)
-                                .HasColumnType("character varying(500)")
-                                .HasColumnName("EvidencePhotoUrl");
+							b1.Property<string>("EvidencePhotoUrl")
+								.IsRequired()
+								.HasMaxLength(500)
+								.HasColumnType("character varying(500)")
+								.HasColumnName("EvidencePhotoUrl");
 
-                            b1.HasKey("DeliveryId");
+							b1.HasKey("DeliveryId");
 
-                            b1.ToTable("Deliveries");
+							b1.ToTable("Deliveries");
 
-                            b1.WithOwner()
-                                .HasForeignKey("DeliveryId");
-                        });
+							b1.WithOwner()
+								.HasForeignKey("DeliveryId");
+						});
 
-                    b.OwnsOne("Nurtricenter.Core.Domain.Delivery.ValueObjects.ValidatedPackage", "Package", b1 =>
-                        {
-                            b1.Property<Guid>("DeliveryId")
-                                .HasColumnType("uuid");
+					b.OwnsOne("Nurtricenter.Core.Domain.Delivery.ValueObjects.ValidatedPackage", "Package", b1 =>
+						{
+							b1.Property<Guid>("DeliveryId")
+								.HasColumnType("uuid");
 
-                            b1.Property<string>("LabelData")
-                                .IsRequired()
-                                .HasMaxLength(500)
-                                .HasColumnType("character varying(500)")
-                                .HasColumnName("PackageLabelData");
+							b1.Property<string>("LabelData")
+								.IsRequired()
+								.HasMaxLength(500)
+								.HasColumnType("character varying(500)")
+								.HasColumnName("PackageLabelData");
 
-                            b1.Property<string>("PackageId")
-                                .IsRequired()
-                                .HasMaxLength(100)
-                                .HasColumnType("character varying(100)")
-                                .HasColumnName("PackageId");
+							b1.Property<string>("PackageId")
+								.IsRequired()
+								.HasMaxLength(100)
+								.HasColumnType("character varying(100)")
+								.HasColumnName("PackageId");
 
-                            b1.Property<string>("PatientId")
-                                .IsRequired()
-                                .HasMaxLength(100)
-                                .HasColumnType("character varying(100)")
-                                .HasColumnName("PatientId");
+							b1.Property<string>("PatientId")
+								.IsRequired()
+								.HasMaxLength(100)
+								.HasColumnType("character varying(100)")
+								.HasColumnName("PatientId");
 
-                            b1.HasKey("DeliveryId");
+							b1.HasKey("DeliveryId");
 
-                            b1.ToTable("Deliveries");
+							b1.ToTable("Deliveries");
 
-                            b1.WithOwner()
-                                .HasForeignKey("DeliveryId");
-                        });
+							b1.WithOwner()
+								.HasForeignKey("DeliveryId");
+						});
 
-                    b.Navigation("Address")
-                        .IsRequired();
+					b.Navigation("Address")
+						.IsRequired();
 
-                    b.Navigation("Confirmation");
+					b.Navigation("Confirmation");
 
-                    b.Navigation("Package")
-                        .IsRequired();
-                });
+					b.Navigation("Package")
+						.IsRequired();
+				});
 
-            modelBuilder.Entity("Nurtricenter.Core.Domain.Route.Route", b =>
-                {
-                    b.Navigation("Deliveries");
-                });
+			modelBuilder.Entity("Nurtricenter.Core.Domain.Route.Route", b =>
+				{
+					b.Navigation("Deliveries");
+				});
 #pragma warning restore 612, 618
-        }
-    }
+		}
+	}
 }

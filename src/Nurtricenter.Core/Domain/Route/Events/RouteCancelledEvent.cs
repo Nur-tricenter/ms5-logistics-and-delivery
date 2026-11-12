@@ -9,11 +9,11 @@ using Joseco.DDD.Core.Abstractions;
 /// </summary>
 public sealed record RouteCancelledEvent : DomainEvent
 {
-    public Guid RouteId { get; }
+	public Guid RouteId { get; }
 
-    public RouteCancelledEvent(Guid routeId)
-    {
-        OccuredOn = DateTime.UtcNow;
-        RouteId = routeId;
-    }
+	public RouteCancelledEvent(Guid routeId)
+	{
+		OccuredOn = DateTime.UtcNow;
+		RouteId = routeId;
+	}
 }

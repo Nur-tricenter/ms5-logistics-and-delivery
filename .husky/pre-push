@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+#
+# pre-push: se ejecuta antes de cada `git push`.
+#   1. Verifica que todo el C# esté formateado con tabs (regla de .editorconfig).
+#   2. Compila la solución, lo que ejecuta el linter (SonarAnalyzer) con las
+#      mismas reglas que SonarLint.
+#   3. Corre la suite de tests.
+#
+# Husky ejecuta este archivo con `sh -e`, por eso el script es POSIX.
+set -eu
+
+solution="src/Nurtricenter.Api/Nurtricenter.Api.slnx"
+
+echo "▶ dotnet format whitespace --verify-no-changes"
+dotnet format whitespace "$solution" --verify-no-changes
+
+echo "▶ dotnet build (SonarAnalyzer)"
+dotnet build "$solution" --nologo -v m
+
+echo "▶ dotnet test"
+dotnet test "$solution" --nologo --no-build -v q
+
+echo "✔ pre-push OK"

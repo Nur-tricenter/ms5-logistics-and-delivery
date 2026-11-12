@@ -11,17 +11,17 @@ using Nurtricenter.WorkerService;
 /// </summary>
 public class DefaultQueueRegistrarTopologyTests
 {
-    [Fact]
-    public void QueueName_IsTheRegistryDefaultQueue()
-    {
-        DefaultQueueRegistrar.QueueName.Should().Be(NurtricenterExchanges.DefaultQueue);
-        DefaultQueueRegistrar.QueueName.Should().Be("nurtricenter.default");
-    }
+	[Fact]
+	public void QueueName_IsTheRegistryDefaultQueue()
+	{
+		DefaultQueueRegistrar.QueueName.Should().Be(NurtricenterExchanges.DefaultQueue);
+		DefaultQueueRegistrar.QueueName.Should().Be("nurtricenter.default");
+	}
 
-    [Fact]
-    public void BoundExchanges_AreExactlyTheRegistryExchanges()
-    {
-        DefaultQueueRegistrar.BoundExchanges.Should().Equal(NurtricenterExchanges.All);
-        DefaultQueueRegistrar.BoundExchanges.Should().HaveCount(10);
-    }
+	[Fact]
+	public void BoundExchanges_AreExactlyTheRegistryExchanges()
+	{
+		DefaultQueueRegistrar.BoundExchanges.Should().Equal(NurtricenterExchanges.All);
+		DefaultQueueRegistrar.BoundExchanges.Should().HaveCount(10);
+	}
 }

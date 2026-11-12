@@ -1,0 +1,53 @@
+# EditorConfig — https://editorconfig.org
+#
+# Lo leen Visual Studio, Rider y VS Code, y `dotnet format` lo usa como fuente de
+# verdad. Los hooks de git (.husky/) lo verifican antes de cada commit.
+#
+# Regla principal del proyecto: el código C# se indenta con TABS, nunca con
+# espacios. El resto de archivos (JSON, YAML, Markdown, XML) usa espacios.
+
+root = true
+
+[*]
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# ---------------------------------------------------------------------------
+# C#
+# ---------------------------------------------------------------------------
+[*.cs]
+indent_style = tab
+indent_size = tab
+tab_width = 4
+
+# Convenciones del repo (ver CLAUDE.md): namespace file-scoped, con los usings
+# debajo de la declaración `namespace X;` y los System.* primero.
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_using_directive_placement = inside_namespace:suggestion
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+
+# IDE0055 = reglas de formato (incluye tabs vs. espacios). Es lo que hace que el
+# linter marque la indentación también durante `dotnet build`, no solo en el editor.
+dotnet_diagnostic.IDE0055.severity = warning
+
+# ---------------------------------------------------------------------------
+# Otros formatos: espacios. YAML no admite tabs.
+# ---------------------------------------------------------------------------
+[*.{json,jsonc,yml,yaml,md,xml,csproj,props,targets,slnx,sh}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+# Migraciones de EF Core: son código generado con namespace con llaves. Se les
+# exige la indentación con tabs (IDE0055), pero no las reglas de estilo que
+# EF volvería a romper al regenerarlas.
+[**/Migrations/*.cs]
+dotnet_diagnostic.IDE0161.severity = none
+
+# Ardalis.ApiEndpoints no son controllers MVC: cada endpoint declara su ruta
+# absoluta y no hay un prefijo de controller que Sonar pueda leer.
+[src/Nurtricenter.Api/Endpoints/**/*.cs]
+dotnet_diagnostic.S6931.severity = none
