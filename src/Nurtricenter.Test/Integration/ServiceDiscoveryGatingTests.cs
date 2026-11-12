@@ -13,15 +13,15 @@ using Nurtricenter.Infrastructure.ServiceDiscovery;
 [Collection("Integration")]
 public class ServiceDiscoveryGatingTests : BaseIntegrationTest
 {
-    public ServiceDiscoveryGatingTests(IntegrationTestWebAppFactory factory) : base(factory)
-    {
-    }
+	public ServiceDiscoveryGatingTests(IntegrationTestWebAppFactory factory) : base(factory)
+	{
+	}
 
-    [Fact]
-    public void ServiceDiscovery_IsDisabled_InTheTestHost()
-    {
-        var configuration = Factory.Services.GetRequiredService<IConfiguration>();
+	[Fact]
+	public void ServiceDiscovery_IsDisabled_InTheTestHost()
+	{
+		var configuration = Factory.Services.GetRequiredService<IConfiguration>();
 
-        configuration.IsServiceDiscoveryEnabled().Should().BeFalse();
-    }
+		configuration.IsServiceDiscoveryEnabled().Should().BeFalse();
+	}
 }

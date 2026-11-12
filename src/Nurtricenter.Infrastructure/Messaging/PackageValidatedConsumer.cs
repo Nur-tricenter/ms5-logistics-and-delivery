@@ -16,56 +16,56 @@ using Nurtricenter.Application.Commands.Deliveries.AddValidatedPackage;
 /// the queue's error queue, so an operator can create the route and requeue it.
 /// </remarks>
 public sealed class PackageValidatedConsumer(
-    IMediator mediator,
-    ILogger<PackageValidatedConsumer> logger) : IIntegrationMessageConsumer<PackageValidated>
+	IMediator mediator,
+	ILogger<PackageValidatedConsumer> logger) : IIntegrationMessageConsumer<PackageValidated>
 {
-    public async Task HandleAsync(PackageValidated message, CancellationToken cancellationToken = default)
-    {
-        var packageId = message.PackageId.ToString();
-        var labelData = message.TrackingNumber;
+	public async Task HandleAsync(PackageValidated message, CancellationToken cancellationToken = default)
+	{
+		var packageId = message.PackageId.ToString();
+		var labelData = message.TrackingNumber;
 
-        if (string.IsNullOrWhiteSpace(labelData))
-        {
-            logger.LogWarning("Package {PackageId} has no tracking number; using its id as label data.", packageId);
-            labelData = packageId;
-        }
+		if (string.IsNullOrWhiteSpace(labelData))
+		{
+			logger.LogWarning("Package {PackageId} has no tracking number; using its id as label data.", packageId);
+			labelData = packageId;
+		}
 
-        var patientId = message.PatientId.ToString();
-        var patientName = message.PatientName;
+		var patientId = message.PatientId.ToString();
+		var patientName = message.PatientName;
 
-        if (string.IsNullOrWhiteSpace(patientName))
-        {
-            logger.LogWarning("Package {PackageId} has no patient name; using the patient id instead.", packageId);
-            patientName = patientId;
-        }
+		if (string.IsNullOrWhiteSpace(patientName))
+		{
+			logger.LogWarning("Package {PackageId} has no patient name; using the patient id instead.", packageId);
+			patientName = patientId;
+		}
 
-        var deliveryDate = message.DeliveryDate;
+		var deliveryDate = message.DeliveryDate;
 
-        if (deliveryDate == DateOnly.MinValue)
-        {
-            // A publisher older than kernel 1.3.0 sends no date; MS3 produces for the day after release.
-            deliveryDate = DateOnly.FromDateTime(message.ReleasedAt.AddDays(1));
-            logger.LogWarning(
-                "Package {PackageId} has no delivery date; assuming {DeliveryDate} (the day after its release).",
-                packageId, deliveryDate);
-        }
+		if (deliveryDate == DateOnly.MinValue)
+		{
+			// A publisher older than kernel 1.3.0 sends no date; MS3 produces for the day after release.
+			deliveryDate = DateOnly.FromDateTime(message.ReleasedAt.AddDays(1));
+			logger.LogWarning(
+				"Package {PackageId} has no delivery date; assuming {DeliveryDate} (the day after its release).",
+				packageId, deliveryDate);
+		}
 
-        var command = new AddValidatedPackageCommand(
-            packageId,
-            patientId,
-            patientName,
-            deliveryDate,
-            message.DeliveryAddress,
-            message.Latitude,
-            message.Longitude,
-            labelData,
-            message.DeliveryDayId,
-            message.PatientPhone);
+		var command = new AddValidatedPackageCommand(
+			packageId,
+			patientId,
+			patientName,
+			deliveryDate,
+			message.DeliveryAddress,
+			message.Latitude,
+			message.Longitude,
+			labelData,
+			message.DeliveryDayId,
+			message.PatientPhone);
 
-        var response = await mediator.Send(command, cancellationToken);
+		var response = await mediator.Send(command, cancellationToken);
 
-        logger.LogInformation(
-            "Package {PackageId} (production order {ProductionOrderId}) added to route {RouteId}.",
-            packageId, message.ProductionOrderId, response.RouteId);
-    }
+		logger.LogInformation(
+			"Package {PackageId} (production order {ProductionOrderId}) added to route {RouteId}.",
+			packageId, message.ProductionOrderId, response.RouteId);
+	}
 }

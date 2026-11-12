@@ -10,15 +10,15 @@ using Nurtricenter.Core.Domain.Courier.Enums;
 /// </summary>
 public sealed record CourierCreatedEvent : DomainEvent
 {
-    public Guid CourierId { get; }
-    public string FullName { get; }
-    public CourierStatus Status { get; }
+	public Guid CourierId { get; }
+	public string FullName { get; }
+	public CourierStatus Status { get; }
 
-    public CourierCreatedEvent(Guid courierId, string fullName, CourierStatus status)
-    {
-        OccuredOn = DateTime.UtcNow;
-        CourierId = courierId;
-        FullName = fullName;
-        Status = status;
-    }
+	public CourierCreatedEvent(Guid courierId, string fullName, CourierStatus status)
+	{
+		OccuredOn = DateTime.UtcNow;
+		CourierId = courierId;
+		FullName = fullName;
+		Status = status;
+	}
 }

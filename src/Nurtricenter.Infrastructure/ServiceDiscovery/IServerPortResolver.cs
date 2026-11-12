@@ -7,5 +7,5 @@ namespace Nurtricenter.Infrastructure.ServiceDiscovery;
 /// </summary>
 public interface IServerPortResolver
 {
-    int? ResolveBoundPort();
+	int? ResolveBoundPort();
 }

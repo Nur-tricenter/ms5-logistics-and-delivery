@@ -10,47 +10,47 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 /// </summary>
 public sealed class InboxMessage
 {
-    private InboxMessage() { } // EF Core
+	private InboxMessage() { } // EF Core
 
-    public InboxMessage(Guid messageId, string messageType, string? correlationId, DateTimeOffset createdAt, DateTimeOffset processedOn)
-    {
-        MessageId = messageId;
-        MessageType = messageType;
-        CorrelationId = correlationId;
-        // Npgsql only writes UTC DateTimeOffsets to timestamptz.
-        MessageCreatedAt = createdAt.ToUniversalTime();
-        ProcessedOn = processedOn.ToUniversalTime();
-    }
+	public InboxMessage(Guid messageId, string messageType, string? correlationId, DateTimeOffset createdAt, DateTimeOffset processedOn)
+	{
+		MessageId = messageId;
+		MessageType = messageType;
+		CorrelationId = correlationId;
+		// Npgsql only writes UTC DateTimeOffsets to timestamptz.
+		MessageCreatedAt = createdAt.ToUniversalTime();
+		ProcessedOn = processedOn.ToUniversalTime();
+	}
 
-    public Guid MessageId { get; private set; }
+	public Guid MessageId { get; private set; }
 
-    public string MessageType { get; private set; } = string.Empty;
+	public string MessageType { get; private set; } = string.Empty;
 
-    public string? CorrelationId { get; private set; }
+	public string? CorrelationId { get; private set; }
 
-    public DateTimeOffset MessageCreatedAt { get; private set; }
+	public DateTimeOffset MessageCreatedAt { get; private set; }
 
-    public DateTimeOffset ProcessedOn { get; private set; }
+	public DateTimeOffset ProcessedOn { get; private set; }
 }
 
 public sealed class InboxMessageConfiguration : IEntityTypeConfiguration<InboxMessage>
 {
-    public void Configure(EntityTypeBuilder<InboxMessage> builder)
-    {
-        builder.ToTable("InboxMessages");
+	public void Configure(EntityTypeBuilder<InboxMessage> builder)
+	{
+		builder.ToTable("InboxMessages");
 
-        builder.HasKey(m => m.MessageId);
+		builder.HasKey(m => m.MessageId);
 
-        builder.Property(m => m.MessageId)
-            .ValueGeneratedNever();
+		builder.Property(m => m.MessageId)
+			.ValueGeneratedNever();
 
-        builder.Property(m => m.MessageType)
-            .HasMaxLength(256)
-            .IsRequired();
+		builder.Property(m => m.MessageType)
+			.HasMaxLength(256)
+			.IsRequired();
 
-        builder.Property(m => m.CorrelationId)
-            .HasMaxLength(128);
+		builder.Property(m => m.CorrelationId)
+			.HasMaxLength(128);
 
-        builder.HasIndex(m => m.ProcessedOn);
-    }
+		builder.HasIndex(m => m.ProcessedOn);
+	}
 }

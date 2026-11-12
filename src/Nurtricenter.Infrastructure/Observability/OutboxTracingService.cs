@@ -35,31 +35,31 @@ using Joseco.Outbox.Contracts.Service;
 /// </remarks>
 internal sealed class OutboxTracingService<TEvent> : IOutboxService<TEvent>
 {
-    private readonly IOutboxService<TEvent> _inner;
+	private readonly IOutboxService<TEvent> _inner;
 
-    public OutboxTracingService(IOutboxService<TEvent> inner)
-    {
-        _inner = inner;
-    }
+	public OutboxTracingService(IOutboxService<TEvent> inner)
+	{
+		_inner = inner;
+	}
 
-    public async Task AddAsync(OutboxMessage<TEvent> message)
-    {
-        Stamp(message);
-        await _inner.AddAsync(message);
-    }
+	public async Task AddAsync(OutboxMessage<TEvent> message)
+	{
+		Stamp(message);
+		await _inner.AddAsync(message);
+	}
 
-    private static void Stamp(OutboxMessage<TEvent> message)
-    {
-        var activity = System.Diagnostics.Activity.Current;
-        if (activity is null)
-        {
-            return;
-        }
+	private static void Stamp(OutboxMessage<TEvent> message)
+	{
+		var activity = System.Diagnostics.Activity.Current;
+		if (activity is null)
+		{
+			return;
+		}
 
-        message.TraceId = activity.TraceId.ToString();
-        message.SpanId = activity.SpanId.ToString();
+		message.TraceId = activity.TraceId.ToString();
+		message.SpanId = activity.SpanId.ToString();
 
-        // TraceId doubles as the correlation id: one identifier across request, row and message.
-        message.CorrelationId ??= activity.TraceId.ToString();
-    }
+		// TraceId doubles as the correlation id: one identifier across request, row and message.
+		message.CorrelationId ??= activity.TraceId.ToString();
+	}
 }

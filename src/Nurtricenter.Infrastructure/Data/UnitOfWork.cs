@@ -22,67 +22,67 @@ using Microsoft.EntityFrameworkCore;
 /// </remarks>
 public sealed class UnitOfWork(AppDbContext context, IMediator mediator) : IUnitOfWork, IOutboxDatabase<DomainEvent>
 {
-    private const int MaxDrainRounds = 10;
+	private const int MaxDrainRounds = 10;
 
-    private bool _isCommitting;
+	private bool _isCommitting;
 
-    public DbSet<OutboxMessage<DomainEvent>> GetOutboxMessages() => context.OutboxMessages;
+	public DbSet<OutboxMessage<DomainEvent>> GetOutboxMessages() => context.OutboxMessages;
 
-    public async Task CommitAsync(CancellationToken cancellationToken = default)
-    {
-        if (_isCommitting)
-            return;
+	public async Task CommitAsync(CancellationToken cancellationToken = default)
+	{
+		if (_isCommitting)
+			return;
 
-        _isCommitting = true;
+		_isCommitting = true;
 
-        try
-        {
-            await DrainDomainEventsAsync(cancellationToken);
-            await context.SaveChangesAsync(cancellationToken);
-        }
-        catch
-        {
-            context.ChangeTracker.Clear();
-            throw;
-        }
-        finally
-        {
-            _isCommitting = false;
-        }
-    }
+		try
+		{
+			await DrainDomainEventsAsync(cancellationToken);
+			await context.SaveChangesAsync(cancellationToken);
+		}
+		catch
+		{
+			context.ChangeTracker.Clear();
+			throw;
+		}
+		finally
+		{
+			_isCommitting = false;
+		}
+	}
 
-    private async Task DrainDomainEventsAsync(CancellationToken cancellationToken)
-    {
-        for (var round = 0; round < MaxDrainRounds; round++)
-        {
-            var domainEvents = CollectDomainEvents();
+	private async Task DrainDomainEventsAsync(CancellationToken cancellationToken)
+	{
+		for (var round = 0; round < MaxDrainRounds; round++)
+		{
+			var domainEvents = CollectDomainEvents();
 
-            if (domainEvents.Length == 0)
-                return;
+			if (domainEvents.Length == 0)
+				return;
 
-            foreach (var domainEvent in domainEvents)
-            {
-                await mediator.Publish(domainEvent, cancellationToken);
-            }
-        }
+			foreach (var domainEvent in domainEvents)
+			{
+				await mediator.Publish(domainEvent, cancellationToken);
+			}
+		}
 
-        throw new InvalidOperationException(
-            $"Domain events kept being raised after {MaxDrainRounds} drain rounds, which indicates an event cycle.");
-    }
+		throw new InvalidOperationException(
+			$"Domain events kept being raised after {MaxDrainRounds} drain rounds, which indicates an event cycle.");
+	}
 
-    private DomainEvent[] CollectDomainEvents()
-    {
-        var collected = new List<DomainEvent>();
+	private DomainEvent[] CollectDomainEvents()
+	{
+		var collected = new List<DomainEvent>();
 
-        foreach (var entity in context.ChangeTracker.Entries<Entity>().Select(entry => entry.Entity))
-        {
-            if (!entity.DomainEvents.Any())
-                continue;
+		foreach (var entity in context.ChangeTracker.Entries<Entity>().Select(entry => entry.Entity))
+		{
+			if (!entity.DomainEvents.Any())
+				continue;
 
-            collected.AddRange(entity.DomainEvents);
-            entity.ClearDomainEvents();
-        }
+			collected.AddRange(entity.DomainEvents);
+			entity.ClearDomainEvents();
+		}
 
-        return collected.ToArray();
-    }
+		return collected.ToArray();
+	}
 }

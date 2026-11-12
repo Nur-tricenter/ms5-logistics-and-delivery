@@ -6,78 +6,78 @@ using Nurtricenter.Core.Domain.Delivery.ValueObjects;
 
 public class ValidatedPackageTests
 {
-    [Fact]
-    public void Constructor_WithValidArguments_SetsPackageIdCorrectly()
-    {
-        var package = new ValidatedPackage("PKG-123", "PAT-456", "Jane Doe", "LABEL-DATA");
-        package.PackageId.Should().Be("PKG-123");
-    }
+	[Fact]
+	public void Constructor_WithValidArguments_SetsPackageIdCorrectly()
+	{
+		var package = new ValidatedPackage("PKG-123", "PAT-456", "Jane Doe", "LABEL-DATA");
+		package.PackageId.Should().Be("PKG-123");
+	}
 
-    [Fact]
-    public void Constructor_WithValidArguments_SetsPatientIdCorrectly()
-    {
-        var package = new ValidatedPackage("PKG-123", "PAT-456", "Jane Doe", "LABEL-DATA");
-        package.PatientId.Should().Be("PAT-456");
-    }
+	[Fact]
+	public void Constructor_WithValidArguments_SetsPatientIdCorrectly()
+	{
+		var package = new ValidatedPackage("PKG-123", "PAT-456", "Jane Doe", "LABEL-DATA");
+		package.PatientId.Should().Be("PAT-456");
+	}
 
-    [Theory]
-    [InlineData("+591 700 11111", "+591 700 11111")]
-    [InlineData("  +591 700 11111  ", "+591 700 11111")]
-    [InlineData("", null)]
-    [InlineData("   ", null)]
-    [InlineData(null, null)]
-    public void Constructor_NormalisesThePatientPhone_AndTreatsBlankAsMissing(string? phone, string? expected)
-    {
-        var package = new ValidatedPackage("PKG-123", "PAT-456", "Jane Doe", "LABEL-DATA", patientPhone: phone);
-        package.PatientPhone.Should().Be(expected);
-    }
+	[Theory]
+	[InlineData("+591 700 11111", "+591 700 11111")]
+	[InlineData("  +591 700 11111  ", "+591 700 11111")]
+	[InlineData("", null)]
+	[InlineData("   ", null)]
+	[InlineData(null, null)]
+	public void Constructor_NormalisesThePatientPhone_AndTreatsBlankAsMissing(string? phone, string? expected)
+	{
+		var package = new ValidatedPackage("PKG-123", "PAT-456", "Jane Doe", "LABEL-DATA", patientPhone: phone);
+		package.PatientPhone.Should().Be(expected);
+	}
 
-    [Fact]
-    public void Constructor_WithValidArguments_SetsLabelDataCorrectly()
-    {
-        var package = new ValidatedPackage("PKG-123", "PAT-456", "Jane Doe", "LABEL-DATA");
-        package.LabelData.Should().Be("LABEL-DATA");
-    }
+	[Fact]
+	public void Constructor_WithValidArguments_SetsLabelDataCorrectly()
+	{
+		var package = new ValidatedPackage("PKG-123", "PAT-456", "Jane Doe", "LABEL-DATA");
+		package.LabelData.Should().Be("LABEL-DATA");
+	}
 
-    [Fact]
-    public void Constructor_WithEmptyPackageId_ThrowsDomainExceptionWithEmptyPackageIdCode()
-    {
-        var act = () => new ValidatedPackage("", "PAT-456", "Jane Doe", "LABEL-DATA");
-        act.Should().Throw<DomainException>().Where(ex => ex.Error.Code == "ValidatedPackage.EmptyPackageId");
-    }
+	[Fact]
+	public void Constructor_WithEmptyPackageId_ThrowsDomainExceptionWithEmptyPackageIdCode()
+	{
+		var act = () => new ValidatedPackage("", "PAT-456", "Jane Doe", "LABEL-DATA");
+		act.Should().Throw<DomainException>().Where(ex => ex.Error.Code == "ValidatedPackage.EmptyPackageId");
+	}
 
-    [Fact]
-    public void Constructor_WithWhiteSpacePackageId_ThrowsDomainException()
-    {
-        var act = () => new ValidatedPackage("   ", "PAT-456", "Jane Doe", "LABEL-DATA");
-        act.Should().Throw<DomainException>().Where(ex => ex.Error.Code == "ValidatedPackage.EmptyPackageId");
-    }
+	[Fact]
+	public void Constructor_WithWhiteSpacePackageId_ThrowsDomainException()
+	{
+		var act = () => new ValidatedPackage("   ", "PAT-456", "Jane Doe", "LABEL-DATA");
+		act.Should().Throw<DomainException>().Where(ex => ex.Error.Code == "ValidatedPackage.EmptyPackageId");
+	}
 
-    [Fact]
-    public void Constructor_WithEmptyPatientId_ThrowsDomainExceptionWithEmptyPatientIdCode()
-    {
-        var act = () => new ValidatedPackage("PKG-123", "", "Jane Doe", "LABEL-DATA");
-        act.Should().Throw<DomainException>().Where(ex => ex.Error.Code == "ValidatedPackage.EmptyPatientId");
-    }
+	[Fact]
+	public void Constructor_WithEmptyPatientId_ThrowsDomainExceptionWithEmptyPatientIdCode()
+	{
+		var act = () => new ValidatedPackage("PKG-123", "", "Jane Doe", "LABEL-DATA");
+		act.Should().Throw<DomainException>().Where(ex => ex.Error.Code == "ValidatedPackage.EmptyPatientId");
+	}
 
-    [Fact]
-    public void Constructor_WithValidArguments_SetsPatientNameCorrectly()
-    {
-        var package = new ValidatedPackage("PKG-123", "PAT-456", "Jane Doe", "LABEL-DATA");
-        package.PatientName.Should().Be("Jane Doe");
-    }
+	[Fact]
+	public void Constructor_WithValidArguments_SetsPatientNameCorrectly()
+	{
+		var package = new ValidatedPackage("PKG-123", "PAT-456", "Jane Doe", "LABEL-DATA");
+		package.PatientName.Should().Be("Jane Doe");
+	}
 
-    [Fact]
-    public void Constructor_WithEmptyPatientName_ThrowsDomainExceptionWithEmptyPatientNameCode()
-    {
-        var act = () => new ValidatedPackage("PKG-123", "PAT-456", " ", "LABEL-DATA");
-        act.Should().Throw<DomainException>().Where(ex => ex.Error.Code == "ValidatedPackage.EmptyPatientName");
-    }
+	[Fact]
+	public void Constructor_WithEmptyPatientName_ThrowsDomainExceptionWithEmptyPatientNameCode()
+	{
+		var act = () => new ValidatedPackage("PKG-123", "PAT-456", " ", "LABEL-DATA");
+		act.Should().Throw<DomainException>().Where(ex => ex.Error.Code == "ValidatedPackage.EmptyPatientName");
+	}
 
-    [Fact]
-    public void Constructor_WithEmptyLabelData_ThrowsDomainExceptionWithEmptyLabelDataCode()
-    {
-        var act = () => new ValidatedPackage("PKG-123", "PAT-456", "Jane Doe", "");
-        act.Should().Throw<DomainException>().Where(ex => ex.Error.Code == "ValidatedPackage.EmptyLabelData");
-    }
+	[Fact]
+	public void Constructor_WithEmptyLabelData_ThrowsDomainExceptionWithEmptyLabelDataCode()
+	{
+		var act = () => new ValidatedPackage("PKG-123", "PAT-456", "Jane Doe", "");
+		act.Should().Throw<DomainException>().Where(ex => ex.Error.Code == "ValidatedPackage.EmptyLabelData");
+	}
 }

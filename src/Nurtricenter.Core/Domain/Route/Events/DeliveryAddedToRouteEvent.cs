@@ -9,19 +9,19 @@ using Joseco.DDD.Core.Abstractions;
 /// </summary>
 public sealed record DeliveryAddedToRouteEvent : DomainEvent
 {
-    public Guid RouteId { get; }
-    public Guid DeliveryId { get; }
-    public string PackageId { get; }
-    public string PatientId { get; }
-    public int? DeliveryDayId { get; }
+	public Guid RouteId { get; }
+	public Guid DeliveryId { get; }
+	public string PackageId { get; }
+	public string PatientId { get; }
+	public int? DeliveryDayId { get; }
 
-    public DeliveryAddedToRouteEvent(Guid routeId, Guid deliveryId, string packageId, string patientId, int? deliveryDayId)
-    {
-        OccuredOn = DateTime.UtcNow;
-        RouteId = routeId;
-        DeliveryId = deliveryId;
-        PackageId = packageId;
-        PatientId = patientId;
-        DeliveryDayId = deliveryDayId;
-    }
+	public DeliveryAddedToRouteEvent(Guid routeId, Guid deliveryId, string packageId, string patientId, int? deliveryDayId)
+	{
+		OccuredOn = DateTime.UtcNow;
+		RouteId = routeId;
+		DeliveryId = deliveryId;
+		PackageId = packageId;
+		PatientId = patientId;
+		DeliveryDayId = deliveryDayId;
+	}
 }

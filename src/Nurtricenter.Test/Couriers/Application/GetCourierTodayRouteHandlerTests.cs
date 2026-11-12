@@ -12,335 +12,335 @@ using Nurtricenter.Core.Domain.Route.Repositories;
 
 public class GetCourierTodayRouteHandlerTests
 {
-    private readonly Mock<ICourierRepository> _courierRepositoryMock;
-    private readonly Mock<IRouteRepository> _routeRepositoryMock;
-    private readonly GetCourierTodayRouteHandler _handler;
-
-    public GetCourierTodayRouteHandlerTests()
-    {
-        _courierRepositoryMock = new Mock<ICourierRepository>();
-        _routeRepositoryMock = new Mock<IRouteRepository>();
-
-        _handler = new GetCourierTodayRouteHandler(
-            _courierRepositoryMock.Object,
-            _routeRepositoryMock.Object);
-    }
-
-    // ──────────────────────────────────────────────────────────────────────
-    // Happy-path tests
-    // ──────────────────────────────────────────────────────────────────────
-
-    [Fact]
-    public async Task Handle_WithValidCourierAndRoute_ReturnsCourierIdInResponse()
-    {
-        // Arrange
-        var courierId = Guid.NewGuid();
-        var (query, _) = ArrangeValidScenario(courierId);
-
-        // Act
-        var result = await _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        result.CourierId.Should().Be(courierId);
-    }
-
-    [Fact]
-    public async Task Handle_WithValidCourierAndRoute_ReturnsRouteIdInResponse()
-    {
-        // Arrange
-        var courierId = Guid.NewGuid();
-        var (query, route) = ArrangeValidScenario(courierId);
-
-        // Act
-        var result = await _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        result.RouteId.Should().Be(route.Id);
-    }
-
-    [Fact]
-    public async Task Handle_WithOneDelivery_ReturnsOneDeliveryInResponse()
-    {
-        // Arrange
-        var courierId = Guid.NewGuid();
-        var (query, _) = ArrangeValidScenario(courierId, deliveryCount: 1);
-
-        // Act
-        var result = await _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        result.Deliveries.Should().HaveCount(1);
-    }
-
-    [Fact]
-    public async Task Handle_WithMultipleDeliveries_ReturnsAllDeliveries()
-    {
-        // Arrange
-        var courierId = Guid.NewGuid();
-        var (query, _) = ArrangeValidScenario(courierId, deliveryCount: 3);
-
-        // Act
-        var result = await _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        result.Deliveries.Should().HaveCount(3);
-    }
-
-    [Fact]
-    public async Task Handle_WithDelivery_ReturnsPatientNameStoredOnThePackage()
-    {
-        // Arrange
-        var courierId = Guid.NewGuid();
-        const string expectedName = "John Doe";
-
-        var courier = new Courier(courierId, "Courier One");
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        var route = new Route(Guid.NewGuid(), courierId, today);
-
-        route.AddDelivery(
-            new ValidatedPackage("PKG-001", "PAT-001", expectedName, "label-data"),
-            new DeliveryAddress("123 Main St", new Coordinate(1.0, 2.0)));
-
-        _courierRepositoryMock
-            .Setup(r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(courier);
-
-        _routeRepositoryMock
-            .Setup(r => r.GetByCourierAndDateAsync(courierId, today, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(route);
-
-        var query = new GetCourierTodayRouteQuery(courierId);
-
-        // Act
-        var result = await _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        result.Deliveries[0].PatientName.Should().Be(expectedName);
-    }
-
-    [Fact]
-    public async Task Handle_WithDelivery_ReturnsThePatientPhoneForTheCourier()
-    {
-        var courierId = Guid.NewGuid();
-        var courier = new Courier(courierId, "Courier One");
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        var route = new Route(Guid.NewGuid(), courierId, today);
-
-        route.AddDelivery(
-            new ValidatedPackage("PKG-001", "PAT-001", "John Doe", "label-data", patientPhone: "+591 700 11111"),
-            new DeliveryAddress("123 Main St", new Coordinate(1.0, 2.0)));
-        route.AddDelivery(
-            new ValidatedPackage("PKG-002", "PAT-002", "Jane Roe", "label-data"),
-            new DeliveryAddress("456 Side St", new Coordinate(1.0, 2.0)));
-
-        _courierRepositoryMock
-            .Setup(r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(courier);
-        _routeRepositoryMock
-            .Setup(r => r.GetByCourierAndDateAsync(courierId, today, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(route);
-
-        var result = await _handler.Handle(new GetCourierTodayRouteQuery(courierId), CancellationToken.None);
-
-        result.Deliveries[0].PatientPhone.Should().Be("+591 700 11111");
-        result.Deliveries[1].PatientPhone.Should().BeNull();
-    }
-
-    [Fact]
-    public async Task Handle_WithDelivery_ReturnsCorrectAddressDescription()
-    {
-        // Arrange
-        var courierId = Guid.NewGuid();
-        const string expectedAddress = "789 Elm Street";
-
-        var courier = new Courier(courierId, "Courier Two");
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        var route = new Route(Guid.NewGuid(), courierId, today);
-
-        route.AddDelivery(
-            new ValidatedPackage("PKG-003", "PAT-002", "Patient Two", "label"),
-            new DeliveryAddress(expectedAddress, new Coordinate(5.0, 6.0)));
-
-        _courierRepositoryMock
-            .Setup(r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(courier);
-
-        _routeRepositoryMock
-            .Setup(r => r.GetByCourierAndDateAsync(courierId, today, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(route);
-
-        var query = new GetCourierTodayRouteQuery(courierId);
-
-        // Act
-        var result = await _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        result.Deliveries[0].Address.Should().Be(expectedAddress);
-    }
-
-    [Fact]
-    public async Task Handle_WithPendingDelivery_ReturnsDeliveryStatusAsPending()
-    {
-        // Arrange
-        var courierId = Guid.NewGuid();
-        var (query, _) = ArrangeValidScenario(courierId, deliveryCount: 1);
-
-        // Act
-        var result = await _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        result.Deliveries[0].Status.Should().Be("Pending");
-    }
-
-    [Fact]
-    public async Task Handle_WithDeliveryWithoutSequenceOrder_AssignsFallbackSequenceOrderStartingAtOne()
-    {
-        // Arrange
-        var courierId = Guid.NewGuid();
-        var (query, _) = ArrangeValidScenario(courierId, deliveryCount: 1);
-
-        // Act
-        var result = await _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        // SequenceOrder is null on new deliveries; handler assigns index + 1 (=> 1 for the first)
-        result.Deliveries[0].SequenceOrder.Should().Be(1);
-    }
-
-    [Fact]
-    public async Task Handle_WithValidQuery_CallsCourierRepositoryExactlyOnceWithCorrectId()
-    {
-        // Arrange
-        var courierId = Guid.NewGuid();
-        var (query, _) = ArrangeValidScenario(courierId);
-
-        // Act
-        await _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        _courierRepositoryMock.Verify(
-            r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
-
-    [Fact]
-    public async Task Handle_WithValidQuery_CallsRouteRepositoryWithCorrectCourierIdAndToday()
-    {
-        // Arrange
-        var courierId = Guid.NewGuid();
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        var (query, _) = ArrangeValidScenario(courierId);
-
-        // Act
-        await _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        _routeRepositoryMock.Verify(
-            r => r.GetByCourierAndDateAsync(courierId, today, It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
-
-    // ──────────────────────────────────────────────────────────────────────
-    // Error / not-found tests
-    // ──────────────────────────────────────────────────────────────────────
-
-    [Fact]
-    public async Task Handle_WhenCourierNotFound_ThrowsDomainExceptionWithNotFoundCode()
-    {
-        // Arrange
-        var courierId = Guid.NewGuid();
-
-        _courierRepositoryMock
-            .Setup(r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Courier?)null);
-
-        var query = new GetCourierTodayRouteQuery(courierId);
-
-        // Act
-        var act = () => _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        await act.Should().ThrowAsync<DomainException>()
-            .Where(ex => ex.Error.Code == "Courier.NotFound");
-    }
-
-    [Fact]
-    public async Task Handle_WhenCourierNotFound_DoesNotCallRouteRepository()
-    {
-        // Arrange
-        var courierId = Guid.NewGuid();
-
-        _courierRepositoryMock
-            .Setup(r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Courier?)null);
-
-        var query = new GetCourierTodayRouteQuery(courierId);
-
-        // Act
-        try { await _handler.Handle(query, CancellationToken.None); } catch { /* expected */ }
-
-        // Assert
-        _routeRepositoryMock.Verify(
-            r => r.GetByCourierAndDateAsync(It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-    }
-
-    [Fact]
-    public async Task Handle_WhenNoRouteForToday_ThrowsDomainExceptionWithNoRouteCode()
-    {
-        // Arrange
-        var courierId = Guid.NewGuid();
-        var courier = new Courier(courierId, "Courier Four");
-
-        _courierRepositoryMock
-            .Setup(r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(courier);
-
-        _routeRepositoryMock
-            .Setup(r => r.GetByCourierAndDateAsync(courierId, It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Route?)null);
-
-        var query = new GetCourierTodayRouteQuery(courierId);
-
-        // Act
-        var act = () => _handler.Handle(query, CancellationToken.None);
-
-        // Assert
-        await act.Should().ThrowAsync<DomainException>()
-            .Where(ex => ex.Error.Code == "Route.NoRouteForToday");
-    }
-
-    // ──────────────────────────────────────────────────────────────────────
-    // Private helpers
-    // ──────────────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Sets up the three mocks for a valid happy-path scenario and returns the
-    /// query and the route created so individual tests can make assertions on them.
-    /// </summary>
-    private (GetCourierTodayRouteQuery query, Route route) ArrangeValidScenario(
-        Guid courierId,
-        int deliveryCount = 2)
-    {
-        var courier = new Courier(courierId, "Test Courier");
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        var route = new Route(Guid.NewGuid(), courierId, today);
-
-        for (int i = 1; i <= deliveryCount; i++)
-        {
-            var package = new ValidatedPackage($"PKG-{i:000}", $"PAT-{i:000}", $"Patient {i}", $"label-{i}");
-            var address = new DeliveryAddress($"Street {i}", new Coordinate(i * 1.0, i * 2.0));
-            route.AddDelivery(package, address);
-        }
-
-        _courierRepositoryMock
-            .Setup(r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(courier);
-
-        _routeRepositoryMock
-            .Setup(r => r.GetByCourierAndDateAsync(courierId, today, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(route);
-
-        return (new GetCourierTodayRouteQuery(courierId), route);
-    }
+	private readonly Mock<ICourierRepository> _courierRepositoryMock;
+	private readonly Mock<IRouteRepository> _routeRepositoryMock;
+	private readonly GetCourierTodayRouteHandler _handler;
+
+	public GetCourierTodayRouteHandlerTests()
+	{
+		_courierRepositoryMock = new Mock<ICourierRepository>();
+		_routeRepositoryMock = new Mock<IRouteRepository>();
+
+		_handler = new GetCourierTodayRouteHandler(
+			_courierRepositoryMock.Object,
+			_routeRepositoryMock.Object);
+	}
+
+	// ──────────────────────────────────────────────────────────────────────
+	// Happy-path tests
+	// ──────────────────────────────────────────────────────────────────────
+
+	[Fact]
+	public async Task Handle_WithValidCourierAndRoute_ReturnsCourierIdInResponse()
+	{
+		// Arrange
+		var courierId = Guid.NewGuid();
+		var (query, _) = ArrangeValidScenario(courierId);
+
+		// Act
+		var result = await _handler.Handle(query, CancellationToken.None);
+
+		// Assert
+		result.CourierId.Should().Be(courierId);
+	}
+
+	[Fact]
+	public async Task Handle_WithValidCourierAndRoute_ReturnsRouteIdInResponse()
+	{
+		// Arrange
+		var courierId = Guid.NewGuid();
+		var (query, route) = ArrangeValidScenario(courierId);
+
+		// Act
+		var result = await _handler.Handle(query, CancellationToken.None);
+
+		// Assert
+		result.RouteId.Should().Be(route.Id);
+	}
+
+	[Fact]
+	public async Task Handle_WithOneDelivery_ReturnsOneDeliveryInResponse()
+	{
+		// Arrange
+		var courierId = Guid.NewGuid();
+		var (query, _) = ArrangeValidScenario(courierId, deliveryCount: 1);
+
+		// Act
+		var result = await _handler.Handle(query, CancellationToken.None);
+
+		// Assert
+		result.Deliveries.Should().HaveCount(1);
+	}
+
+	[Fact]
+	public async Task Handle_WithMultipleDeliveries_ReturnsAllDeliveries()
+	{
+		// Arrange
+		var courierId = Guid.NewGuid();
+		var (query, _) = ArrangeValidScenario(courierId, deliveryCount: 3);
+
+		// Act
+		var result = await _handler.Handle(query, CancellationToken.None);
+
+		// Assert
+		result.Deliveries.Should().HaveCount(3);
+	}
+
+	[Fact]
+	public async Task Handle_WithDelivery_ReturnsPatientNameStoredOnThePackage()
+	{
+		// Arrange
+		var courierId = Guid.NewGuid();
+		const string expectedName = "John Doe";
+
+		var courier = new Courier(courierId, "Courier One");
+		var today = DateOnly.FromDateTime(DateTime.Today);
+		var route = new Route(Guid.NewGuid(), courierId, today);
+
+		route.AddDelivery(
+			new ValidatedPackage("PKG-001", "PAT-001", expectedName, "label-data"),
+			new DeliveryAddress("123 Main St", new Coordinate(1.0, 2.0)));
+
+		_courierRepositoryMock
+			.Setup(r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(courier);
+
+		_routeRepositoryMock
+			.Setup(r => r.GetByCourierAndDateAsync(courierId, today, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(route);
+
+		var query = new GetCourierTodayRouteQuery(courierId);
+
+		// Act
+		var result = await _handler.Handle(query, CancellationToken.None);
+
+		// Assert
+		result.Deliveries[0].PatientName.Should().Be(expectedName);
+	}
+
+	[Fact]
+	public async Task Handle_WithDelivery_ReturnsThePatientPhoneForTheCourier()
+	{
+		var courierId = Guid.NewGuid();
+		var courier = new Courier(courierId, "Courier One");
+		var today = DateOnly.FromDateTime(DateTime.Today);
+		var route = new Route(Guid.NewGuid(), courierId, today);
+
+		route.AddDelivery(
+			new ValidatedPackage("PKG-001", "PAT-001", "John Doe", "label-data", patientPhone: "+591 700 11111"),
+			new DeliveryAddress("123 Main St", new Coordinate(1.0, 2.0)));
+		route.AddDelivery(
+			new ValidatedPackage("PKG-002", "PAT-002", "Jane Roe", "label-data"),
+			new DeliveryAddress("456 Side St", new Coordinate(1.0, 2.0)));
+
+		_courierRepositoryMock
+			.Setup(r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(courier);
+		_routeRepositoryMock
+			.Setup(r => r.GetByCourierAndDateAsync(courierId, today, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(route);
+
+		var result = await _handler.Handle(new GetCourierTodayRouteQuery(courierId), CancellationToken.None);
+
+		result.Deliveries[0].PatientPhone.Should().Be("+591 700 11111");
+		result.Deliveries[1].PatientPhone.Should().BeNull();
+	}
+
+	[Fact]
+	public async Task Handle_WithDelivery_ReturnsCorrectAddressDescription()
+	{
+		// Arrange
+		var courierId = Guid.NewGuid();
+		const string expectedAddress = "789 Elm Street";
+
+		var courier = new Courier(courierId, "Courier Two");
+		var today = DateOnly.FromDateTime(DateTime.Today);
+		var route = new Route(Guid.NewGuid(), courierId, today);
+
+		route.AddDelivery(
+			new ValidatedPackage("PKG-003", "PAT-002", "Patient Two", "label"),
+			new DeliveryAddress(expectedAddress, new Coordinate(5.0, 6.0)));
+
+		_courierRepositoryMock
+			.Setup(r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(courier);
+
+		_routeRepositoryMock
+			.Setup(r => r.GetByCourierAndDateAsync(courierId, today, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(route);
+
+		var query = new GetCourierTodayRouteQuery(courierId);
+
+		// Act
+		var result = await _handler.Handle(query, CancellationToken.None);
+
+		// Assert
+		result.Deliveries[0].Address.Should().Be(expectedAddress);
+	}
+
+	[Fact]
+	public async Task Handle_WithPendingDelivery_ReturnsDeliveryStatusAsPending()
+	{
+		// Arrange
+		var courierId = Guid.NewGuid();
+		var (query, _) = ArrangeValidScenario(courierId, deliveryCount: 1);
+
+		// Act
+		var result = await _handler.Handle(query, CancellationToken.None);
+
+		// Assert
+		result.Deliveries[0].Status.Should().Be("Pending");
+	}
+
+	[Fact]
+	public async Task Handle_WithDeliveryWithoutSequenceOrder_AssignsFallbackSequenceOrderStartingAtOne()
+	{
+		// Arrange
+		var courierId = Guid.NewGuid();
+		var (query, _) = ArrangeValidScenario(courierId, deliveryCount: 1);
+
+		// Act
+		var result = await _handler.Handle(query, CancellationToken.None);
+
+		// Assert
+		// SequenceOrder is null on new deliveries; handler assigns index + 1 (=> 1 for the first)
+		result.Deliveries[0].SequenceOrder.Should().Be(1);
+	}
+
+	[Fact]
+	public async Task Handle_WithValidQuery_CallsCourierRepositoryExactlyOnceWithCorrectId()
+	{
+		// Arrange
+		var courierId = Guid.NewGuid();
+		var (query, _) = ArrangeValidScenario(courierId);
+
+		// Act
+		await _handler.Handle(query, CancellationToken.None);
+
+		// Assert
+		_courierRepositoryMock.Verify(
+			r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()),
+			Times.Once);
+	}
+
+	[Fact]
+	public async Task Handle_WithValidQuery_CallsRouteRepositoryWithCorrectCourierIdAndToday()
+	{
+		// Arrange
+		var courierId = Guid.NewGuid();
+		var today = DateOnly.FromDateTime(DateTime.Today);
+		var (query, _) = ArrangeValidScenario(courierId);
+
+		// Act
+		await _handler.Handle(query, CancellationToken.None);
+
+		// Assert
+		_routeRepositoryMock.Verify(
+			r => r.GetByCourierAndDateAsync(courierId, today, It.IsAny<CancellationToken>()),
+			Times.Once);
+	}
+
+	// ──────────────────────────────────────────────────────────────────────
+	// Error / not-found tests
+	// ──────────────────────────────────────────────────────────────────────
+
+	[Fact]
+	public async Task Handle_WhenCourierNotFound_ThrowsDomainExceptionWithNotFoundCode()
+	{
+		// Arrange
+		var courierId = Guid.NewGuid();
+
+		_courierRepositoryMock
+			.Setup(r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()))
+			.ReturnsAsync((Courier?)null);
+
+		var query = new GetCourierTodayRouteQuery(courierId);
+
+		// Act
+		var act = () => _handler.Handle(query, CancellationToken.None);
+
+		// Assert
+		await act.Should().ThrowAsync<DomainException>()
+			.Where(ex => ex.Error.Code == "Courier.NotFound");
+	}
+
+	[Fact]
+	public async Task Handle_WhenCourierNotFound_DoesNotCallRouteRepository()
+	{
+		// Arrange
+		var courierId = Guid.NewGuid();
+
+		_courierRepositoryMock
+			.Setup(r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()))
+			.ReturnsAsync((Courier?)null);
+
+		var query = new GetCourierTodayRouteQuery(courierId);
+
+		// Act
+		try { await _handler.Handle(query, CancellationToken.None); } catch { /* expected */ }
+
+		// Assert
+		_routeRepositoryMock.Verify(
+			r => r.GetByCourierAndDateAsync(It.IsAny<Guid>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()),
+			Times.Never);
+	}
+
+	[Fact]
+	public async Task Handle_WhenNoRouteForToday_ThrowsDomainExceptionWithNoRouteCode()
+	{
+		// Arrange
+		var courierId = Guid.NewGuid();
+		var courier = new Courier(courierId, "Courier Four");
+
+		_courierRepositoryMock
+			.Setup(r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(courier);
+
+		_routeRepositoryMock
+			.Setup(r => r.GetByCourierAndDateAsync(courierId, It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
+			.ReturnsAsync((Route?)null);
+
+		var query = new GetCourierTodayRouteQuery(courierId);
+
+		// Act
+		var act = () => _handler.Handle(query, CancellationToken.None);
+
+		// Assert
+		await act.Should().ThrowAsync<DomainException>()
+			.Where(ex => ex.Error.Code == "Route.NoRouteForToday");
+	}
+
+	// ──────────────────────────────────────────────────────────────────────
+	// Private helpers
+	// ──────────────────────────────────────────────────────────────────────
+
+	/// <summary>
+	/// Sets up the three mocks for a valid happy-path scenario and returns the
+	/// query and the route created so individual tests can make assertions on them.
+	/// </summary>
+	private (GetCourierTodayRouteQuery query, Route route) ArrangeValidScenario(
+		Guid courierId,
+		int deliveryCount = 2)
+	{
+		var courier = new Courier(courierId, "Test Courier");
+		var today = DateOnly.FromDateTime(DateTime.Today);
+		var route = new Route(Guid.NewGuid(), courierId, today);
+
+		for (int i = 1; i <= deliveryCount; i++)
+		{
+			var package = new ValidatedPackage($"PKG-{i:000}", $"PAT-{i:000}", $"Patient {i}", $"label-{i}");
+			var address = new DeliveryAddress($"Street {i}", new Coordinate(i * 1.0, i * 2.0));
+			route.AddDelivery(package, address);
+		}
+
+		_courierRepositoryMock
+			.Setup(r => r.GetByIdAsync(courierId, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(courier);
+
+		_routeRepositoryMock
+			.Setup(r => r.GetByCourierAndDateAsync(courierId, today, It.IsAny<CancellationToken>()))
+			.ReturnsAsync(route);
+
+		return (new GetCourierTodayRouteQuery(courierId), route);
+	}
 }

@@ -11,6 +11,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 COPY NuGet.config                                                      ./
+COPY .editorconfig Directory.Build.props                              ./
 COPY contracts/Nurtricenter.Contracts.csproj                          contracts/
 COPY src/Nurtricenter.Api/Nurtricenter.Api.csproj                      src/Nurtricenter.Api/
 COPY src/Nurtricenter.Application/Nurtricenter.Application.csproj      src/Nurtricenter.Application/

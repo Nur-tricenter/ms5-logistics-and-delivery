@@ -12,15 +12,15 @@ using Nurtricenter.Core.Domain.Route.Events;
 /// </summary>
 public sealed class SaveInOutboxWhenDeliveryAddedToRouteEvent : INotificationHandler<DeliveryAddedToRouteEvent>
 {
-    private readonly IOutboxService<DomainEvent> _outboxService;
+	private readonly IOutboxService<DomainEvent> _outboxService;
 
-    public SaveInOutboxWhenDeliveryAddedToRouteEvent(IOutboxService<DomainEvent> outboxService)
-    {
-        _outboxService = outboxService;
-    }
+	public SaveInOutboxWhenDeliveryAddedToRouteEvent(IOutboxService<DomainEvent> outboxService)
+	{
+		_outboxService = outboxService;
+	}
 
-    public async Task Handle(DeliveryAddedToRouteEvent notification, CancellationToken cancellationToken = default)
-    {
-        await _outboxService.AddAsync(new OutboxMessage<DomainEvent>(notification));
-    }
+	public async Task Handle(DeliveryAddedToRouteEvent notification, CancellationToken cancellationToken = default)
+	{
+		await _outboxService.AddAsync(new OutboxMessage<DomainEvent>(notification));
+	}
 }

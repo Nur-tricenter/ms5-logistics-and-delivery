@@ -6,59 +6,59 @@ using Joseco.DDD.Core.Results;
 
 public sealed record ValidatedPackage
 {
-    public string PackageId { get; }
-    public string PatientId { get; }
-    public string PatientName { get; }
-    public string LabelData { get; }
+	public string PackageId { get; }
+	public string PatientId { get; }
+	public string PatientName { get; }
+	public string LabelData { get; }
 
-    /// <summary>
-    /// MS4's delivery day this package was produced for; null when MS3 matched no calendar or the
-    /// package was loaded by hand.
-    /// </summary>
-    public int? DeliveryDayId { get; }
+	/// <summary>
+	/// MS4's delivery day this package was produced for; null when MS3 matched no calendar or the
+	/// package was loaded by hand.
+	/// </summary>
+	public int? DeliveryDayId { get; }
 
-    /// <summary>Patient's contact phone for the courier; null when the clinic has none or the package was loaded by hand.</summary>
-    public string? PatientPhone { get; }
+	/// <summary>Patient's contact phone for the courier; null when the clinic has none or the package was loaded by hand.</summary>
+	public string? PatientPhone { get; }
 
-    public ValidatedPackage(
-        string packageId, string patientId, string patientName, string labelData, int? deliveryDayId = null,
-        string? patientPhone = null)
-    {
-        if (string.IsNullOrWhiteSpace(packageId))
-            throw new DomainException(
-                new Error(
-                    "ValidatedPackage.EmptyPackageId",
-                    "Package ID cannot be empty.",
-                    ErrorType.Validation));
+	public ValidatedPackage(
+		string packageId, string patientId, string patientName, string labelData, int? deliveryDayId = null,
+		string? patientPhone = null)
+	{
+		if (string.IsNullOrWhiteSpace(packageId))
+			throw new DomainException(
+				new Error(
+					"ValidatedPackage.EmptyPackageId",
+					"Package ID cannot be empty.",
+					ErrorType.Validation));
 
-        if (string.IsNullOrWhiteSpace(patientId))
-            throw new DomainException(
-                new Error(
-                    "ValidatedPackage.EmptyPatientId",
-                    "Patient ID cannot be empty.",
-                    ErrorType.Validation));
+		if (string.IsNullOrWhiteSpace(patientId))
+			throw new DomainException(
+				new Error(
+					"ValidatedPackage.EmptyPatientId",
+					"Patient ID cannot be empty.",
+					ErrorType.Validation));
 
-        if (string.IsNullOrWhiteSpace(patientName))
-            throw new DomainException(
-                new Error(
-                    "ValidatedPackage.EmptyPatientName",
-                    "Patient name cannot be empty.",
-                    ErrorType.Validation));
+		if (string.IsNullOrWhiteSpace(patientName))
+			throw new DomainException(
+				new Error(
+					"ValidatedPackage.EmptyPatientName",
+					"Patient name cannot be empty.",
+					ErrorType.Validation));
 
-        if (string.IsNullOrWhiteSpace(labelData))
-            throw new DomainException(
-                new Error(
-                    "ValidatedPackage.EmptyLabelData",
-                    "Label data cannot be empty.",
-                    ErrorType.Validation));
+		if (string.IsNullOrWhiteSpace(labelData))
+			throw new DomainException(
+				new Error(
+					"ValidatedPackage.EmptyLabelData",
+					"Label data cannot be empty.",
+					ErrorType.Validation));
 
-        PackageId = packageId;
-        PatientId = patientId;
-        PatientName = patientName;
-        LabelData = labelData;
-        DeliveryDayId = deliveryDayId;
-        PatientPhone = string.IsNullOrWhiteSpace(patientPhone) ? null : patientPhone.Trim();
-    }
+		PackageId = packageId;
+		PatientId = patientId;
+		PatientName = patientName;
+		LabelData = labelData;
+		DeliveryDayId = deliveryDayId;
+		PatientPhone = string.IsNullOrWhiteSpace(patientPhone) ? null : patientPhone.Trim();
+	}
 
-    private ValidatedPackage() { }
+	private ValidatedPackage() { }
 }

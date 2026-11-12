@@ -1,0 +1,22 @@
+{
+  "name": "ms5-logistics-and-delivery",
+  "private": true,
+  "description": "Herramientas de desarrollo (Husky + lint-staged). No es una aplicación Node: el producto es .NET.",
+  "scripts": {
+    "prepare": "husky",
+    "lint:staged": "lint-staged",
+    "format": "dotnet format whitespace src/Nurtricenter.Api/Nurtricenter.Api.slnx",
+    "format:check": "dotnet format whitespace src/Nurtricenter.Api/Nurtricenter.Api.slnx --verify-no-changes",
+    "lint": "dotnet build src/Nurtricenter.Api/Nurtricenter.Api.slnx"
+  },
+  "lint-staged": {
+    "*.cs": "dotnet format whitespace src/Nurtricenter.Api/Nurtricenter.Api.slnx --include"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0"
+  },
+  "engines": {
+    "node": ">=20.17"
+  }
+}

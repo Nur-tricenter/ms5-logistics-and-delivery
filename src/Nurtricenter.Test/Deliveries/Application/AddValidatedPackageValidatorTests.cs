@@ -5,31 +5,31 @@ using Nurtricenter.Application.Commands.Deliveries.AddValidatedPackage;
 
 public class AddValidatedPackageValidatorTests
 {
-    private readonly AddValidatedPackageValidator _validator = new();
+	private readonly AddValidatedPackageValidator _validator = new();
 
-    [Fact]
-    public void Validate_WithValidCommand_IsValid()
-    {
-        var command = new AddValidatedPackageCommand(
-            "PKG-001", "PAT-001", "Juan Perez", new DateOnly(2026, 10, 29), "Av. Banzer 123", null, null, "NTR-001");
+	[Fact]
+	public void Validate_WithValidCommand_IsValid()
+	{
+		var command = new AddValidatedPackageCommand(
+			"PKG-001", "PAT-001", "Juan Perez", new DateOnly(2026, 10, 29), "Av. Banzer 123", null, null, "NTR-001");
 
-        _validator.Validate(command).IsValid.Should().BeTrue();
-    }
+		_validator.Validate(command).IsValid.Should().BeTrue();
+	}
 
-    [Fact]
-    public void Validate_WithAllRequiredFieldsEmpty_ReturnsSixErrors()
-    {
-        var command = new AddValidatedPackageCommand("", "", "", DateOnly.MinValue, "", null, null, "");
+	[Fact]
+	public void Validate_WithAllRequiredFieldsEmpty_ReturnsSixErrors()
+	{
+		var command = new AddValidatedPackageCommand("", "", "", DateOnly.MinValue, "", null, null, "");
 
-        var result = _validator.Validate(command);
+		var result = _validator.Validate(command);
 
-        result.IsValid.Should().BeFalse();
-        result.Errors.Select(e => e.PropertyName).Should().BeEquivalentTo(
-            nameof(AddValidatedPackageCommand.PackageId),
-            nameof(AddValidatedPackageCommand.PatientId),
-            nameof(AddValidatedPackageCommand.PatientName),
-            nameof(AddValidatedPackageCommand.DeliveryDate),
-            nameof(AddValidatedPackageCommand.Address),
-            nameof(AddValidatedPackageCommand.LabelData));
-    }
+		result.IsValid.Should().BeFalse();
+		result.Errors.Select(e => e.PropertyName).Should().BeEquivalentTo(
+			nameof(AddValidatedPackageCommand.PackageId),
+			nameof(AddValidatedPackageCommand.PatientId),
+			nameof(AddValidatedPackageCommand.PatientName),
+			nameof(AddValidatedPackageCommand.DeliveryDate),
+			nameof(AddValidatedPackageCommand.Address),
+			nameof(AddValidatedPackageCommand.LabelData));
+	}
 }

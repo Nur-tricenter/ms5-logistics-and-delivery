@@ -11,7 +11,7 @@ namespace Nurtricenter.Api.Configuration;
 /// </remarks>
 public class HttpsRedirectionOptions
 {
-    public const string SectionName = "HttpsRedirection";
+	public const string SectionName = "HttpsRedirection";
 
-    public bool Enabled { get; set; }
+	public bool Enabled { get; set; }
 }

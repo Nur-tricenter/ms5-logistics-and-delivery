@@ -12,15 +12,15 @@ using Nurtricenter.Core.Domain.Courier.Events;
 /// </summary>
 public sealed class SaveInOutboxWhenCourierStatusChangedEvent : INotificationHandler<CourierStatusChangedEvent>
 {
-    private readonly IOutboxService<DomainEvent> _outboxService;
+	private readonly IOutboxService<DomainEvent> _outboxService;
 
-    public SaveInOutboxWhenCourierStatusChangedEvent(IOutboxService<DomainEvent> outboxService)
-    {
-        _outboxService = outboxService;
-    }
+	public SaveInOutboxWhenCourierStatusChangedEvent(IOutboxService<DomainEvent> outboxService)
+	{
+		_outboxService = outboxService;
+	}
 
-    public async Task Handle(CourierStatusChangedEvent notification, CancellationToken cancellationToken = default)
-    {
-        await _outboxService.AddAsync(new OutboxMessage<DomainEvent>(notification));
-    }
+	public async Task Handle(CourierStatusChangedEvent notification, CancellationToken cancellationToken = default)
+	{
+		await _outboxService.AddAsync(new OutboxMessage<DomainEvent>(notification));
+	}
 }

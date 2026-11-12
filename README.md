@@ -9,6 +9,7 @@
 | [docs/running-locally.md](docs/running-locally.md) | **Guía paso a paso** para levantar ms5 junto con toda la plataforma (gateway, Consul, RabbitMQ, catálogo, identity, ms4) en tu máquina. **Empieza aquí.** |
 | [docs/connectivity-and-messaging.md](docs/connectivity-and-messaging.md) | Cómo funciona la integración: outbox transaccional, publicación a RabbitMQ, registro en Consul, ruteo del gateway, contratos en el shared kernel, troubleshooting. |
 | [docs/TESTING.md](docs/TESTING.md) | Suite de tests. |
+| [docs/linting-and-hooks.md](docs/linting-and-hooks.md) | SonarLint, `.editorconfig` (regla de tabs) y hooks de git con Husky + lint-staged. |
 | [docs/domain-model.md](docs/domain-model.md) | Modelo de dominio. |
 
 ## Ejecución en la plataforma (recomendado)

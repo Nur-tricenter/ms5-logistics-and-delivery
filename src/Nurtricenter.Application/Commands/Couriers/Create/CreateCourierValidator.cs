@@ -4,10 +4,10 @@ using FluentValidation;
 
 public sealed class CreateCourierValidator : AbstractValidator<CreateCourierCommand>
 {
-    public CreateCourierValidator()
-    {
-        RuleFor(x => x.FullName)
-            .NotEmpty()
-            .MaximumLength(200);
-    }
+	public CreateCourierValidator()
+	{
+		RuleFor(x => x.FullName)
+			.NotEmpty()
+			.MaximumLength(200);
+	}
 }

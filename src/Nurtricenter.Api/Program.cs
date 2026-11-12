@@ -13,15 +13,15 @@ args = args.Where(a => !string.Equals(a, "--migrate", StringComparison.OrdinalIg
 var builder = WebApplication.CreateBuilder(args);
 
 Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(builder.Configuration)
-    .CreateLogger();
+	.ReadFrom.Configuration(builder.Configuration)
+	.CreateLogger();
 
 builder.Host.UseSerilog();
 
 builder.Services
-    .AddApplication()
-    .AddInfrastructure(builder.Configuration)
-    .AddApiServices(builder.Configuration);
+	.AddApplication()
+	.AddInfrastructure(builder.Configuration)
+	.AddApiServices(builder.Configuration);
 
 var app = builder.Build();
 
@@ -30,38 +30,38 @@ var app = builder.Build();
 // listener never start for the job container.
 if (migrateOnly)
 {
-    try
-    {
-        using var scope = app.Services.CreateScope();
-        await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
-        Log.Information("Migrations applied");
-        return 0;
-    }
-    catch (Exception ex)
-    {
-        Log.Fatal(ex, "Migration failed");
-        return 1;
-    }
-    finally
-    {
-        Log.CloseAndFlush();
-    }
+	try
+	{
+		using var scope = app.Services.CreateScope();
+		await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
+		Log.Information("Migrations applied");
+		return 0;
+	}
+	catch (Exception ex)
+	{
+		Log.Fatal(ex, "Migration failed");
+		return 1;
+	}
+	finally
+	{
+		Log.CloseAndFlush();
+	}
 }
 
 app.UseApiMiddleware();
 
 try
 {
-    Log.Information("Starting Nurtricenter API");
-    app.Run();
+	Log.Information("Starting Nurtricenter API");
+	app.Run();
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "Application terminated unexpectedly");
+	Log.Fatal(ex, "Application terminated unexpectedly");
 }
 finally
 {
-    Log.CloseAndFlush();
+	Log.CloseAndFlush();
 }
 
 return 0;

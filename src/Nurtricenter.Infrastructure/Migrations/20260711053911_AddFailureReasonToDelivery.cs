@@ -4,26 +4,26 @@
 
 namespace Nurtricenter.Infrastructure.Migrations
 {
-    /// <inheritdoc />
-    public partial class AddFailureReasonToDelivery : Migration
-    {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.AddColumn<string>(
-                name: "FailureReason",
-                table: "Deliveries",
-                type: "character varying(500)",
-                maxLength: 500,
-                nullable: true);
-        }
+	/// <inheritdoc />
+	public partial class AddFailureReasonToDelivery : Migration
+	{
+		/// <inheritdoc />
+		protected override void Up(MigrationBuilder migrationBuilder)
+		{
+			migrationBuilder.AddColumn<string>(
+				name: "FailureReason",
+				table: "Deliveries",
+				type: "character varying(500)",
+				maxLength: 500,
+				nullable: true);
+		}
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropColumn(
-                name: "FailureReason",
-                table: "Deliveries");
-        }
-    }
+		/// <inheritdoc />
+		protected override void Down(MigrationBuilder migrationBuilder)
+		{
+			migrationBuilder.DropColumn(
+				name: "FailureReason",
+				table: "Deliveries");
+		}
+	}
 }

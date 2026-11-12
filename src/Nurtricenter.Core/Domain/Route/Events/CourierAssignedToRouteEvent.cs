@@ -9,13 +9,13 @@ using Joseco.DDD.Core.Abstractions;
 /// </summary>
 public sealed record CourierAssignedToRouteEvent : DomainEvent
 {
-    public Guid RouteId { get; }
-    public Guid CourierId { get; }
+	public Guid RouteId { get; }
+	public Guid CourierId { get; }
 
-    public CourierAssignedToRouteEvent(Guid routeId, Guid courierId)
-    {
-        OccuredOn = DateTime.UtcNow;
-        RouteId = routeId;
-        CourierId = courierId;
-    }
+	public CourierAssignedToRouteEvent(Guid routeId, Guid courierId)
+	{
+		OccuredOn = DateTime.UtcNow;
+		RouteId = routeId;
+		CourierId = courierId;
+	}
 }

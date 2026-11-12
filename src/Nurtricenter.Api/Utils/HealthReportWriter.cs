@@ -14,29 +14,29 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 /// </remarks>
 public static class HealthReportWriter
 {
-    public static async Task WriteAsync(HttpContext context, HealthReport report)
-    {
-        context.Response.ContentType = "application/json; charset=utf-8";
+	public static async Task WriteAsync(HttpContext context, HealthReport report)
+	{
+		context.Response.ContentType = "application/json; charset=utf-8";
 
-        var payload = new
-        {
-            success = report.Status == HealthStatus.Healthy,
-            message = report.Status.ToString(),
-            data = new
-            {
-                status = report.Status.ToString(),
-                totalDurationMilliseconds = report.TotalDuration.TotalMilliseconds,
-                entries = report.Entries.Select(entry => new
-                {
-                    name = entry.Key,
-                    status = entry.Value.Status.ToString(),
-                    description = entry.Value.Description,
-                    durationMilliseconds = entry.Value.Duration.TotalMilliseconds,
-                    error = entry.Value.Exception?.Message
-                })
-            }
-        };
+		var payload = new
+		{
+			success = report.Status == HealthStatus.Healthy,
+			message = report.Status.ToString(),
+			data = new
+			{
+				status = report.Status.ToString(),
+				totalDurationMilliseconds = report.TotalDuration.TotalMilliseconds,
+				entries = report.Entries.Select(entry => new
+				{
+					name = entry.Key,
+					status = entry.Value.Status.ToString(),
+					description = entry.Value.Description,
+					durationMilliseconds = entry.Value.Duration.TotalMilliseconds,
+					error = entry.Value.Exception?.Message
+				})
+			}
+		};
 
-        await context.Response.WriteAsJsonAsync(payload);
-    }
+		await context.Response.WriteAsJsonAsync(payload);
+	}
 }
