@@ -34,7 +34,10 @@ Formatting & linting (see `docs/linting-and-hooks.md`): C# uses **tabs**, enforc
 `.editorconfig` + `dotnet format`; `SonarAnalyzer.CSharp` is referenced from the root
 `Directory.Build.props` and runs on every `dotnet build`. After cloning, `npm install` activates
 the Husky hooks (`pre-commit` formats staged C# with lint-staged, `pre-push` runs
-`dotnet format --verify-no-changes`, build and tests).
+`dotnet format --verify-no-changes`, build and tests). CI is `.github/workflows/ci.yml`: on every
+push/PR it restores, verifies formatting, builds (SonarAnalyzer) and tests; on push it also runs
+the SonarCloud scan (`SONAR_PROJECT_KEY`/`SONAR_ORGANIZATION` in the workflow `env`, and the
+`SONAR_TOKEN` / `NUGET_*` repository secrets).
 
 ```bash
 npm run format        # dotnet format whitespace

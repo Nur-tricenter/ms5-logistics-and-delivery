@@ -122,3 +122,49 @@ dotnet build src/Nurtricenter.Api/Nurtricenter.Api.slnx
   `Endpoints/**` because those are `Ardalis.ApiEndpoints` classes, not MVC controllers, so the
   "add a controller route prefix" rule does not apply.
 - Run `npm run format` after changing formatting rules, and commit the reformatted files.
+
+## 7. CI (GitHub Actions) and SonarCloud
+
+The workflow is [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). It runs on every push
+(all branches), on pull requests and manually (`workflow_dispatch`).
+
+| Job | What it runs |
+| --- | --- |
+| **Build, format & tests** (`build-test`) | Restore → `dotnet format --verify-no-changes` (tabs rule) → `dotnet build` with SonarAnalyzer → `dotnet test` (299 tests). |
+| **SonarCloud scan** (`sonarcloud`) | On push only: `dotnet sonarscanner begin` → `dotnet build` → `dotnet sonarscanner end`, which uploads the analysis to sonarcloud.io. |
+
+The hooks are local; CI runs the underlying tools directly (`dotnet format`, `dotnet build`,
+`dotnet test`), so it does not need Node or Husky.
+
+### Required repository secrets
+
+Configure them in **Settings → Secrets and variables → Actions**:
+
+| Secret | Purpose |
+| --- | --- |
+| `NUGET_USERNAME` | GitHub user for the private Nur-tricenter feed (read:packages). |
+| `NUGET_TOKEN` | Classic GitHub token with `read:packages` (the `Nur.Tricenter.*` kernel lives in the organization feed). |
+| `SONAR_TOKEN` | Token generated in SonarCloud (**My Account → Security**). Without it the `sonarcloud` job fails with an explanatory error. |
+
+If `NUGET_USERNAME` / `NUGET_TOKEN` are not defined, the workflow falls back to `github.actor` and
+the automatic `GITHUB_TOKEN` (with `packages: read`); that only works if the token can read the
+kernel package.
+
+### SonarCloud project setup (one time)
+
+1. Sign in at [sonarcloud.io](https://sonarcloud.io) with the GitHub account that owns the
+   organization, and import **Nur-tricenter/ms5-logistics-and-delivery**.
+2. Copy the **organization key** and **project key** shown by SonarCloud into the `env:` block of
+   the workflow (`SONAR_ORGANIZATION` and `SONAR_PROJECT_KEY`; the committed defaults are
+   `nur-tricenter` and `Nur-tricenter_ms5-logistics-and-delivery`). Keys are **case-sensitive**
+   and do not share casing: the organization is lowercase, the project key keeps the capital `N`.
+3. Generate an analysis token and add it as the `SONAR_TOKEN` repository secret.
+4. Push a commit; the scan appears under **Activity** in the SonarCloud project.
+
+The analysis parameters live in the workflow (`/d:sonar.host.url`, `/d:sonar.exclusions`, ...).
+EF migrations are excluded because they are generated code. This is a basic scan: no coverage is
+uploaded and the quality gate is not awaited. To enforce the gate, add
+`/d:sonar.qualitygate.wait=true` to `sonarscanner begin`.
+
+> SonarCloud is free for public repositories. For a private repository it requires a paid
+> SonarCloud plan (or making the repository public).
