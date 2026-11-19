@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Configuración del recolector de cobertura (coverlet.collector) que usa el
+  comando "dotnet test" con el colector "XPlat Code Coverage".
+
+  Formato OpenCover: es uno de los que importa el plugin de C# de SonarCloud
+  (sonar.cs.opencover.reportsPaths). El formato por defecto de coverlet es
+  Cobertura, que SonarCloud NO lee para C#. Por eso este archivo es necesario
+  para que el scan muestre cobertura en lugar de 0.0%.
+-->
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <Format>opencover</Format>
+          <!-- Solo código de producción: el proyecto de tests no cuenta. -->
+          <Include>[Nurtricenter.Api]*,[Nurtricenter.Application]*,[Nurtricenter.Core]*,[Nurtricenter.Infrastructure]*,[Nurtricenter.WorkerService]*,[Nurtricenter.Contracts]*</Include>
+          <Exclude>[Nurtricenter.Test]*</Exclude>
+          <!-- Migraciones generadas por EF: no tienen tests y ensucian el % -->
+          <ExcludeByFile>**/Migrations/*.cs</ExcludeByFile>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

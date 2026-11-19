@@ -90,7 +90,7 @@ jobs:
       - name: Restore
         run: dotnet restore "$SOLUTION"
 
-      - name: Build & analyze
+      - name: Check SonarCloud token
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
@@ -99,14 +99,44 @@ jobs:
             exit 1
           fi
 
+      - name: Begin SonarCloud analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
           dotnet sonarscanner begin \
             /k:"$SONAR_PROJECT_KEY" \
             /o:"$SONAR_ORGANIZATION" \
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.token="$SONAR_TOKEN" \
             /d:sonar.sourceEncoding="UTF-8" \
+            /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml" \
             /d:sonar.exclusions="**/Migrations/**"
 
-          dotnet build "$SOLUTION" --configuration Release --no-restore
+      - name: Build
+        run: dotnet build "$SOLUTION" --configuration Release --no-restore
 
-          dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+      # Genera TestResults/**/coverage.opencover.xml (formato que SonarCloud
+      # importa según coverlet.runsettings). Sin este paso SonarCloud reporta 0.0%.
+      - name: Test with coverage
+        run: >
+          dotnet test "$SOLUTION"
+          --configuration Release
+          --no-build
+          --no-restore
+          --settings coverlet.runsettings
+          --results-directory TestResults
+          --collect:"XPlat Code Coverage"
+
+      - name: Verify coverage report
+        run: |
+          report=$(find TestResults -name coverage.opencover.xml -print -quit)
+          if [ -z "$report" ]; then
+            echo "::error::Coverlet no generó TestResults/**/coverage.opencover.xml."
+            exit 1
+          fi
+          echo "Reporte de cobertura: $report"
+
+      - name: End SonarCloud analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"

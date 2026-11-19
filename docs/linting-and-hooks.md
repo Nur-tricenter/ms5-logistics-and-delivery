@@ -131,10 +131,39 @@ The workflow is [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). It ru
 | Job | What it runs |
 | --- | --- |
 | **Build, format & tests** (`build-test`) | Restore → `dotnet format --verify-no-changes` (tabs rule) → `dotnet build` with SonarAnalyzer → `dotnet test` (299 tests). |
-| **SonarCloud scan** (`sonarcloud`) | On push only: `dotnet sonarscanner begin` → `dotnet build` → `dotnet sonarscanner end`, which uploads the analysis to sonarcloud.io. |
+| **SonarCloud scan** (`sonarcloud`) | On push only: `dotnet sonarscanner begin` → `dotnet build` → `dotnet test` with coverage → `dotnet sonarscanner end`, which uploads the analysis **and the coverage report** to sonarcloud.io. |
 
 The hooks are local; CI runs the underlying tools directly (`dotnet format`, `dotnet build`,
 `dotnet test`), so it does not need Node or Husky.
+
+### Coverage
+
+SonarCloud does not run the tests — it only imports a coverage report produced during the scan.
+Without that report the project shows **0.0%**. The Sonar job therefore runs:
+
+```bash
+dotnet test ... --settings coverlet.runsettings \
+  --results-directory TestResults --collect:"XPlat Code Coverage"
+```
+
+`coverlet.runsettings` makes Coverlet emit **OpenCover** XML (`coverage.opencover.xml`); Coverlet's
+default is Cobertura, which the Sonar C# plugin does not read. The scanner receives the report via
+`/d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml"`. The runsettings also
+limits coverage to the production assemblies and excludes EF migrations (generated code with no
+tests of its own). The current suite reports ~76% line coverage; the number in SonarCloud is
+recomputed from the files it analyzes.
+
+To reproduce locally:
+
+```bash
+dotnet test src/Nurtricenter.Api/Nurtricenter.Api.slnx \
+  --settings coverlet.runsettings \
+  --results-directory TestResults \
+  --collect:"XPlat Code Coverage"
+```
+
+`TestResults/` is gitignored. Coverage appears in SonarCloud after the next push that runs the
+`sonarcloud` job.
 
 ### Required repository secrets
 
