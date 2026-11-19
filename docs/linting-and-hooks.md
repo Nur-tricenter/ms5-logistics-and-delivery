@@ -156,7 +156,8 @@ kernel package.
    organization, and import **Nur-tricenter/ms5-logistics-and-delivery**.
 2. Copy the **organization key** and **project key** shown by SonarCloud into the `env:` block of
    the workflow (`SONAR_ORGANIZATION` and `SONAR_PROJECT_KEY`; the committed defaults are
-   `nur-tricenter` and `Nur-tricenter_ms5-logistics-and-delivery`).
+   `nur-tricenter` and `Nur-tricenter_ms5-logistics-and-delivery`). Keys are **case-sensitive**
+   and do not share casing: the organization is lowercase, the project key keeps the capital `N`.
 3. Generate an analysis token and add it as the `SONAR_TOKEN` repository secret.
 4. Push a commit; the scan appears under **Activity** in the SonarCloud project.
 

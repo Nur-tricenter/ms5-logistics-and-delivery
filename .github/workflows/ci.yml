@@ -24,10 +24,11 @@ env:
   # GITHUB_TOKEN (solo funciona si el token tiene acceso al paquete).
   NUGET_USERNAME: ${{ secrets.NUGET_USERNAME || github.actor }}
   NUGET_TOKEN: ${{ secrets.NUGET_TOKEN || secrets.GITHUB_TOKEN }}
-  # Identidad del proyecto en sonarcloud.io. Ajustar si la organización o el
-  # project key reales son distintos.
+  # Identidad del proyecto en sonarcloud.io. Las claves son sensibles a
+  # mayúsculas y NO comparten formato: la organización es `nur-tricenter`
+  # (minúsculas) y el project key conserva la N mayúscula.
   SONAR_PROJECT_KEY: Nur-tricenter_ms5-logistics-and-delivery
-  SONAR_ORGANIZATION: Nur-tricenter
+  SONAR_ORGANIZATION: nur-tricenter
 
 jobs:
   build-test:
