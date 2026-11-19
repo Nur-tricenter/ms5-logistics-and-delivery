@@ -1,0 +1,111 @@
+name: CI
+
+# Se ejecuta en cada push (así el ciclo de integración continua corre también en
+# ramas de feature), en cada pull request y manualmente desde la pestaña Actions.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  SOLUTION: src/Nurtricenter.Api/Nurtricenter.Api.slnx
+  DOTNET_VERSION: 10.0.x
+  # Credenciales del feed privado de Nur-tricenter (Nur.Tricenter.*).
+  # Se configuran como secretos del repositorio; si no existen, se intenta con
+  # GITHUB_TOKEN (solo funciona si el token tiene acceso al paquete).
+  NUGET_USERNAME: ${{ secrets.NUGET_USERNAME || github.actor }}
+  NUGET_TOKEN: ${{ secrets.NUGET_TOKEN || secrets.GITHUB_TOKEN }}
+  # Identidad del proyecto en sonarcloud.io. Ajustar si la organización o el
+  # project key reales son distintos.
+  SONAR_PROJECT_KEY: Nur-tricenter_ms5-logistics-and-delivery
+  SONAR_ORGANIZATION: Nur-tricenter
+
+jobs:
+  build-test:
+    name: Build, format & tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore "$SOLUTION"
+
+      - name: Build (SonarAnalyzer)
+        run: dotnet build "$SOLUTION" --configuration Release --no-restore --no-incremental
+
+      - name: Test
+        run: dotnet test "$SOLUTION" --configuration Release --no-build --no-restore
+
+  sonarcloud:
+    name: SonarCloud scan
+    # Los pull requests desde forks no reciben secretos; se analiza en cada push.
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # SonarCloud necesita el historial completo para el "blame" (SCM).
+          fetch-depth: 0
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Set up Java (required by SonarCloud scanner)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Cache SonarCloud scanner
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Install SonarScanner for .NET
+        run: dotnet tool install --global dotnet-sonarscanner --version 12.1.0
+
+      - name: Restore
+        run: dotnet restore "$SOLUTION"
+
+      - name: Build & analyze
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "::error::Falta el secreto SONAR_TOKEN. Agrégalo en Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+          dotnet sonarscanner begin \
+            /k:"$SONAR_PROJECT_KEY" \
+            /o:"$SONAR_ORGANIZATION" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.token="$SONAR_TOKEN" \
+            /d:sonar.sourceEncoding="UTF-8" \
+            /d:sonar.exclusions="**/Migrations/**"
+
+          dotnet build "$SOLUTION" --configuration Release --no-restore
+
+          dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
